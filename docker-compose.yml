@@ -1,0 +1,103 @@
+services:
+  db:
+    image: mysql:8
+    container_name: "${MYSQL_DATABASE}-db"
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER:     "${DATABASE_NAME}"
+      MYSQL_PASSWORD: "${DATABASE_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${DATABASE_ROOT_PASSWORD}"
+    ports:
+      - "3306:3306"
+    networks:
+      - curriculum_network
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: "${APP_NAME}-app"
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/workspace
+    ports:
+      - "8000:8000"
+    networks:
+      - curriculum_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: "${APP_NAME}-redis"
+    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"  # 환경변수 사용
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      # redis.conf는 더 이상 필요하지 않거나 동적으로 생성
+    networks:
+      - curriculum_network
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"  # 환경변수로 전달
+    env_file: .env  # .env 파일 사용
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # prometheus:
+  #   image: prom/prometheus:v2.45.0
+  #   container_name: "${APP_NAME}-prometheus"
+  #   restart: unless-stopped
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+  #     - prometheus_data:/prometheus
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #     - '--web.console.libraries=/etc/prometheus/console_libraries'
+  #     - '--web.console.templates=/etc/prometheus/consoles'
+  #     - '--storage.tsdb.retention.time=200h'
+  #     - '--web.enable-lifecycle'
+  #   depends_on:
+  #     - app
+
+  # grafana:
+  #   image: grafana/grafana:10.0.0
+  #   container_name: "${APP_NAME}-grafana"
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - GF_SECURITY_ADMIN_USER=admin
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin123
+  #     - GF_USERS_ALLOW_SIGN_UP=false
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #     - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+  #   depends_on:
+  #     - prometheus
+
+      
+volumes:
+  db_data:
+  redis_data:
+  # prometheus_data:
+  # grafana_data:
+networks:
+  curriculum_network:
