@@ -32,9 +32,12 @@ from app.modules.social.interface.controller.bookmark_controller import bookmark
 from app.modules.social.interface.controller.social_controller import social_router
 from app.modules.feed.interface.controller.feed_controller import feed_router  # 추가
 from app.modules.social.interface.controller.follow_controller import follow_router
-
+from app.modules.admin.interface.controller.admin_user_controller import (
+    admin_user_router,
+)
 
 v1_router = APIRouter(prefix="/api/v1")
+v1_router.include_router(admin_user_router)
 v1_router.include_router(auth_router)
 v1_router.include_router(user_router)
 v1_router.include_router(curriculum_router)

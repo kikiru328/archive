@@ -66,3 +66,10 @@ def decode_access_token(token: str) -> dict[str, Any]:
         return payload
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+
+def assert_admin(current_user: CurrentUser) -> None:
+    if current_user.role != Role.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="관리자만 접근이 가능합니다."
+        )

@@ -53,6 +53,7 @@ class Container(containers.DeclarativeContainer):
     # setting
     wiring_config = containers.WiringConfiguration(
         packages=[
+            "app.modules.admin.interface.controller",
             "app.modules.user.interface.controller",
             "app.modules.curriculum.interface.controller",
             "app.modules.learning.interface.controller",
