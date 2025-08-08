@@ -4,6 +4,12 @@ from dependency_injector import containers, providers
 from app.common.db.session import get_session
 
 from app.common.llm.openai_client import OpenAILLMClient
+from app.modules.admin.application.service.admin_curriculum_service import (
+    AdminCurriculumService,
+)
+from app.modules.admin.infrastructure.repository.admin_curriculum_repository import (
+    AdminCurriculumRepository,
+)
 from app.modules.curriculum.application.service.curriculum_service import (
     CurriculumService,
 )
@@ -246,3 +252,10 @@ class Container(containers.DeclarativeContainer):
 
     feed_service = feed_container.feed_service
     feed_repository = feed_container.feed_repository
+
+    admin_curriculum_repository = providers.Factory(
+        AdminCurriculumRepository, session=db_session
+    )
+    admin_curriculum_service = providers.Factory(
+        AdminCurriculumService, repo=admin_curriculum_repository
+    )
