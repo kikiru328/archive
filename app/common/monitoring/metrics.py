@@ -4,7 +4,7 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# 메트릭 정의
+# 사용자 메트릭
 user_registrations_total = Counter(
     "user_registrations_total", "Total number of user registrations"
 )
@@ -13,7 +13,7 @@ total_users_gauge = Gauge("total_users", "Total number of users in the system")
 
 active_users_gauge = Gauge("active_users", "Number of currently active users")
 
-
+# 커리큘럼 메트릭
 curriculum_creations_total = Counter(
     "curriculum_creations_total", "Total number of curriculum creations"
 )
@@ -24,10 +24,35 @@ total_curriculums_gauge = Gauge(
 
 public_curriculums_gauge = Gauge("public_curriculums", "Number of public curriculums")
 
-private_curriculums_gauge = Gauge(
-    "private_curriculums", "Number of private curriculums"
+# 학습 메트릭
+summary_creations_total = Counter(
+    "summary_creations_total", "Total number of summary creations"
 )
 
+total_summaries_gauge = Gauge(
+    "total_summaries", "Total number of summaries in the system"
+)
+
+feedback_creations_total = Counter(
+    "feedback_creations_total", "Total number of feedback creations"
+)
+
+total_feedbacks_gauge = Gauge(
+    "total_feedbacks", "Total number of feedbacks in the system"
+)
+
+# 학습 통계 메트릭
+average_completion_rate_gauge = Gauge(
+    "average_completion_rate", "Average curriculum completion rate across all users"
+)
+
+average_feedback_score_gauge = Gauge(
+    "average_feedback_score", "Average feedback score across all users"
+)
+
+active_learners_gauge = Gauge(
+    "active_learners", "Number of users who created summaries in the last 7 days"
+)
 
 # 메트릭 서버 상태
 _metrics_server_port: Optional[int] = None
@@ -94,6 +119,36 @@ def set_public_curriculums(count: int) -> None:
     public_curriculums_gauge.set(count)
 
 
-def set_private_curriculums(count: int) -> None:
-    """비공개 커리큘럼 수 설정"""
-    private_curriculums_gauge.set(count)
+def increment_summary_creation() -> None:
+    """요약 생성 수 증가"""
+    summary_creations_total.inc()
+
+
+def set_total_summaries(count: int) -> None:
+    """전체 요약 수 설정"""
+    total_summaries_gauge.set(count)
+
+
+def increment_feedback_creation() -> None:
+    """피드백 생성 수 증가"""
+    feedback_creations_total.inc()
+
+
+def set_total_feedbacks(count: int) -> None:
+    """전체 피드백 수 설정"""
+    total_feedbacks_gauge.set(count)
+
+
+def set_average_completion_rate(rate: float) -> None:
+    """평균 완료율 설정"""
+    average_completion_rate_gauge.set(rate)
+
+
+def set_average_feedback_score(score: float) -> None:
+    """평균 피드백 점수 설정"""
+    average_feedback_score_gauge.set(score)
+
+
+def set_active_learners(count: int) -> None:
+    """활성 학습자 수 설정"""
+    active_learners_gauge.set(count)

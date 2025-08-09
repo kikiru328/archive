@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from ulid import ULID  # type: ignore
-
+from app.common.monitoring.metrics import increment_summary_creation
 from app.modules.learning.application.dto.learning_dto import (
     CreateSummaryCommand,
     UpdateSummaryCommand,
@@ -62,6 +62,7 @@ class SummaryService:
         )
 
         await self.summary_repo.save(summary)
+        increment_summary_creation()
         return SummaryDTO.from_domain(summary)
 
     async def get_summary_by_id(

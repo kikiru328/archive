@@ -18,7 +18,157 @@
           {
             "expr": "total_users",
             "refId": "A"
+          {
+        "id": 9,
+        "title": "Learning Metrics Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "total_summaries",
+            "refId": "A",
+            "legendFormat": "Total Summaries"
+          },
+          {
+            "expr": "total_feedbacks",
+            "refId": "B",
+            "legendFormat": "Total Feedbacks"
+          },
+          {
+            "expr": "active_learners",
+            "refId": "C",
+            "legendFormat": "Active Learners"
           }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 30
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Learning Quality Metrics",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "average_completion_rate",
+            "refId": "A",
+            "legendFormat": "Avg Completion %"
+          },
+          {
+            "expr": "average_feedback_score",
+            "refId": "B",
+            "legendFormat": "Avg Score"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 12,
+          "y": 30
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 50
+                },
+                {
+                  "color": "green",
+                  "value": 70
+                }
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "Learning Activity Over Time",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "total_summaries",
+            "refId": "A",
+            "legendFormat": "Total Summaries"
+          },
+          {
+            "expr": "total_feedbacks",
+            "refId": "B",
+            "legendFormat": "Total Feedbacks"
+          },
+          {
+            "expr": "active_learners",
+            "refId": "C",
+            "legendFormat": "Active Learners (7 days)"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 36
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 12,
+        "title": "Creation Rates",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(summary_creations_total[1m])",
+            "refId": "A",
+            "legendFormat": "Summary Creations/sec"
+          },
+          {
+            "expr": "rate(feedback_creations_total[1m])",
+            "refId": "B",
+            "legendFormat": "Feedback Creations/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 44
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "reqps"
+          }
+        }
+      }
         ],
         "gridPos": {
           "h": 6,
