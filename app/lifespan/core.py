@@ -10,7 +10,7 @@
 # @asynccontextmanager
 # async def core_lifespan(app: FastAPI):
 #     logger.info("⚙️  Wire DI")
-#     app.container: Container # type: ignore
+#     app.container: Container()
 #     app.container.wire(
 #         packages=[
 #             "user.interface.controllers",

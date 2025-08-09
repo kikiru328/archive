@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     llm_endpoint: str = ""
     redis_url: str = ""
     kafka_bootstrap_servers: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_public_key: str = ""
+    langfuse_host: str = "https://cloud.langfuse.com"
 
 
 @lru_cache

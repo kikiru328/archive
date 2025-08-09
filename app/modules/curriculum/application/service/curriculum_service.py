@@ -37,6 +37,7 @@ from app.modules.curriculum.domain.vo.week_number import WeekNumber
 from app.modules.user.domain.vo.role import RoleVO
 from app.modules.social.domain.repository.follow_repo import IFollowRepository
 from app.common.monitoring.metrics import increment_curriculum_creation
+from app.common.llm.decorators import trace_llm_operation
 
 
 class CurriculumService:
@@ -163,6 +164,7 @@ class CurriculumService:
 
         return CurriculumDTO.from_domain(curriculum)
 
+    @trace_llm_operation("generate_curriculum")
     async def generate_curriculum(
         self,
         command: GenerateCurriculumCommand,

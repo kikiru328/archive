@@ -32,6 +32,8 @@ from app.modules.learning.domain.vo.feedback_comment import FeedbackComment
 from app.modules.learning.domain.vo.feedback_score import FeedbackScore
 from app.modules.user.domain.vo.role import RoleVO
 
+from app.common.llm.decorators import trace_llm_operation
+
 
 class FeedbackService:
     def __init__(
@@ -89,6 +91,7 @@ class FeedbackService:
         increment_feedback_creation()
         return FeedbackDTO.from_domain(feedback)
 
+    @trace_llm_operation("generate_feedback")
     async def generate_feedback_with_llm(
         self,
         summary_id: str,

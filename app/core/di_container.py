@@ -4,7 +4,8 @@ from dependency_injector import containers, providers
 from app.common.cache import redis_client
 from app.common.db.session import get_session
 
-from app.common.llm.openai_client import OpenAILLMClient
+# from app.common.llm.openai_client import OpenAILLMClient
+from app.common.llm.langchain_client import LangChainLLMClient
 from app.common.monitoring.metrics_collector import MetricsService
 from app.modules.admin.application.service.admin_curriculum_service import (
     AdminCurriculumService,
@@ -108,7 +109,8 @@ class Container(containers.DeclarativeContainer):
 
     # LLM
     llm_client = providers.Singleton(
-        OpenAILLMClient,
+        # OpenAILLMClient,
+        LangChainLLMClient,
         api_key=config.provided.llm_api_key,
     )
 
