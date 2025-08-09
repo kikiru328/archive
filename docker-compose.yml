@@ -86,8 +86,8 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin123
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./app/commonmonitoring/grafana/provisioning:/etc/grafana/provisioning
-      - ./app/commonmonitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./app/common/monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./app/common/monitoring/grafana/dashboards:/var/lib/grafana/dashboards
     networks:
       - curriculum_network
 

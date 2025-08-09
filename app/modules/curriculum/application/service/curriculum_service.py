@@ -36,6 +36,7 @@ from app.modules.curriculum.domain.vo.visibility import Visibility
 from app.modules.curriculum.domain.vo.week_number import WeekNumber
 from app.modules.user.domain.vo.role import RoleVO
 from app.modules.social.domain.repository.follow_repo import IFollowRepository
+from app.common.monitoring.metrics import increment_curriculum_creation
 
 
 class CurriculumService:
@@ -158,9 +159,7 @@ class CurriculumService:
 
         await self.curriculum_repo.save(curriculum)
 
-        # if (curriculum.visibility == Visibility.PUBLIC and
-        #     self.feed_event_handler):
-        #     await self.feed_event_handler.on_curriculum_created(curriculum.id)
+        increment_curriculum_creation()
 
         return CurriculumDTO.from_domain(curriculum)
 
@@ -200,6 +199,7 @@ class CurriculumService:
         )
 
         await self.curriculum_repo.save(curriculum)
+        increment_curriculum_creation()
         return CurriculumDTO.from_domain(curriculum)
 
     async def get_curriculums(

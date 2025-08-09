@@ -21,8 +21,8 @@
           }
         ],
         "gridPos": {
-          "h": 8,
-          "w": 8,
+          "h": 6,
+          "w": 6,
           "x": 0,
           "y": 0
         },
@@ -46,40 +46,6 @@
       },
       {
         "id": 2,
-        "title": "User Registrations Rate",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "rate(user_registrations_total[5m])",
-            "refId": "A"
-          }
-        ],
-        "gridPos": {
-          "h": 8,
-          "w": 8,
-          "x": 8,
-          "y": 0
-        },
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "thresholds"
-            },
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "blue",
-                  "value": null
-                }
-              ]
-            },
-            "unit": "reqps"
-          }
-        }
-      },
-      {
-        "id": 3,
         "title": "Active Users",
         "type": "stat",
         "targets": [
@@ -89,9 +55,9 @@
           }
         ],
         "gridPos": {
-          "h": 8,
-          "w": 8,
-          "x": 16,
+          "h": 6,
+          "w": 6,
+          "x": 6,
           "y": 0
         },
         "fieldConfig": {
@@ -113,7 +79,112 @@
         }
       },
       {
+        "id": 3,
+        "title": "Total Curriculums",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "total_curriculums",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 6,
+          "x": 12,
+          "y": 0
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "blue",
+                  "value": null
+                }
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
         "id": 4,
+        "title": "Registration & Creation Rates",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(user_registrations_total[5m])",
+            "refId": "A",
+            "legendFormat": "User Reg/sec"
+          },
+          {
+            "expr": "rate(curriculum_creations_total[5m])",
+            "refId": "B",
+            "legendFormat": "Curriculum/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 6,
+          "x": 18,
+          "y": 0
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "purple",
+                  "value": null
+                }
+              ]
+            },
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Public vs Private Curriculums",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "public_curriculums",
+            "refId": "A",
+            "legendFormat": "Public"
+          },
+          {
+            "expr": "private_curriculums",
+            "refId": "B",
+            "legendFormat": "Private"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 0,
+          "y": 6
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 6,
         "title": "User Metrics Over Time",
         "type": "timeseries",
         "targets": [
@@ -130,9 +201,9 @@
         ],
         "gridPos": {
           "h": 8,
-          "w": 24,
-          "x": 0,
-          "y": 8
+          "w": 16,
+          "x": 8,
+          "y": 6
         },
         "fieldConfig": {
           "defaults": {
@@ -144,21 +215,62 @@
         }
       },
       {
-        "id": 5,
-        "title": "Registration Rate",
+        "id": 7,
+        "title": "Curriculum Metrics Over Time",
         "type": "timeseries",
         "targets": [
           {
-            "expr": "rate(user_registrations_total[1m])",
+            "expr": "total_curriculums",
             "refId": "A",
-            "legendFormat": "Registrations/sec"
+            "legendFormat": "Total Curriculums"
+          },
+          {
+            "expr": "public_curriculums",
+            "refId": "B",
+            "legendFormat": "Public Curriculums"
+          },
+          {
+            "expr": "private_curriculums",
+            "refId": "C",
+            "legendFormat": "Private Curriculums"
           }
         ],
         "gridPos": {
           "h": 8,
           "w": 24,
           "x": 0,
-          "y": 16
+          "y": 14
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Creation Rates",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(user_registrations_total[1m])",
+            "refId": "A",
+            "legendFormat": "User Registrations/sec"
+          },
+          {
+            "expr": "rate(curriculum_creations_total[1m])",
+            "refId": "B",
+            "legendFormat": "Curriculum Creations/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 22
         },
         "fieldConfig": {
           "defaults": {

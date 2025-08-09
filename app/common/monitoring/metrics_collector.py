@@ -6,8 +6,15 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.cache.redis_client import RedisClient
-from app.common.monitoring.metrics import set_active_users, set_total_users
+from app.common.monitoring.metrics import (
+    set_active_users,
+    set_total_users,
+    set_total_curriculums,
+    set_public_curriculums,
+    set_private_curriculums,
+)
 from app.modules.user.infrastructure.db_model.user import UserModel
+from app.modules.curriculum.infrastructure.db_model.curriculum import CurriculumModel
 
 logger = logging.getLogger(__name__)
 
@@ -75,8 +82,19 @@ class MetricsService:
             active_users = await self._get_active_users()
             set_active_users(active_users)
 
+            # 커리큘럼 메트릭
+            total_curriculums = await self._get_total_curriculums()
+            set_total_curriculums(total_curriculums)
+
+            public_curriculums = await self._get_public_curriculums()
+            set_public_curriculums(public_curriculums)
+
+            private_curriculums = await self._get_private_curriculums()
+            set_private_curriculums(private_curriculums)
+
             logger.debug(
-                f"Metrics updated - Total users: {total_users}, Active users: {active_users}"
+                f"Metrics updated - Users: {total_users} (active: {active_users}), "
+                + f"Curriculums: {total_curriculums} (public: {public_curriculums}, private: {private_curriculums})"
             )
 
         except Exception as e:
@@ -129,3 +147,29 @@ class MetricsService:
     async def force_update(self) -> None:
         """즉시 메트릭 업데이트"""
         await self.update_all_metrics()
+
+    async def _get_total_curriculums(self) -> int:
+        """전체 커리큘럼 수 조회"""
+        query = select(func.count()).select_from(CurriculumModel)
+        result = await self.session.execute(query)
+        return result.scalar_one()
+
+    async def _get_public_curriculums(self) -> int:
+        """공개 커리큘럼 수 조회"""
+        query = (
+            select(func.count())
+            .select_from(CurriculumModel)
+            .where(CurriculumModel.visibility == "PUBLIC")
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one()
+
+    async def _get_private_curriculums(self) -> int:
+        """비공개 커리큘럼 수 조회"""
+        query = (
+            select(func.count())
+            .select_from(CurriculumModel)
+            .where(CurriculumModel.visibility == "PRIVATE")
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one()

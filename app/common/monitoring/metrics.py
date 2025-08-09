@@ -13,6 +13,22 @@ total_users_gauge = Gauge("total_users", "Total number of users in the system")
 
 active_users_gauge = Gauge("active_users", "Number of currently active users")
 
+
+curriculum_creations_total = Counter(
+    "curriculum_creations_total", "Total number of curriculum creations"
+)
+
+total_curriculums_gauge = Gauge(
+    "total_curriculums", "Total number of curriculums in the system"
+)
+
+public_curriculums_gauge = Gauge("public_curriculums", "Number of public curriculums")
+
+private_curriculums_gauge = Gauge(
+    "private_curriculums", "Number of private curriculums"
+)
+
+
 # 메트릭 서버 상태
 _metrics_server_port: Optional[int] = None
 
@@ -61,3 +77,23 @@ def set_total_users(count: int) -> None:
 def set_active_users(count: int) -> None:
     """활성 사용자 수 설정"""
     active_users_gauge.set(count)
+
+
+def increment_curriculum_creation() -> None:
+    """커리큘럼 생성 수 증가"""
+    curriculum_creations_total.inc()
+
+
+def set_total_curriculums(count: int) -> None:
+    """전체 커리큘럼 수 설정"""
+    total_curriculums_gauge.set(count)
+
+
+def set_public_curriculums(count: int) -> None:
+    """공개 커리큘럼 수 설정"""
+    public_curriculums_gauge.set(count)
+
+
+def set_private_curriculums(count: int) -> None:
+    """비공개 커리큘럼 수 설정"""
+    private_curriculums_gauge.set(count)
