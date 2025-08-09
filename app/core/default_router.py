@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 
 
-default_router = APIRouter(prefix="/")
+default_router = APIRouter(prefix="")
 
 
-@default_router.get("", tags=["Default"])
+@default_router.get("/", tags=["Default"])
 def hello() -> dict[str, str]:
     return {
         "message": "Curriculum Learning Platform API",
