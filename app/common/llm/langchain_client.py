@@ -18,24 +18,39 @@ class LangChainLLMClient(ILLMClientRepository):
     def __init__(
         self, api_key: Optional[str] = None, model: str = "gpt-4o-mini"
     ) -> None:
+        logger.info("🔥 LangChainLLMClient v3 초기화 시작")
+
         settings: Settings = get_settings()
         self.api_key: str = api_key or settings.llm_api_key
         self.model: str = model
 
+        logger.info(f"🔥 Langfuse v3 manager enabled: {langfuse_manager.is_enabled}")
+
         # 콜백 리스트 준비
         callbacks = []
-        callback_handler = langfuse_manager.callback_handler
-        if langfuse_manager.is_enabled and callback_handler:
-            callbacks.append(callback_handler)
-            logger.info("Langfuse callback handler added to LLM client")
+        if langfuse_manager.is_enabled:
+            callback_handler = langfuse_manager.callback_handler
+            if callback_handler:
+                callbacks.append(callback_handler)
+                logger.info(
+                    f"🔥 Langfuse v3 callback handler added: {type(callback_handler)}"
+                )
+            else:
+                logger.error("🔥 Langfuse v3 is enabled but callback handler is None!")
+        else:
+            logger.warning("🔥 Langfuse v3 is not enabled, no callback handler added")
 
         # LangChain ChatOpenAI 클라이언트 초기화
         self.llm = ChatOpenAI(
             model=self.model,
-            api_key=self.api_key,  # type: ignore
+            api_key=self.api_key,
             temperature=0.3,
-            model_kwargs={"max_tokens": 1200},
+            max_tokens=1200,  # model_kwargs 대신 직접 설정
             callbacks=callbacks,
+        )
+
+        logger.info(
+            f"🔥 LangChain v3 client initialized with {len(callbacks)} callbacks"
         )
 
     def _create_messages(self, prompt: str, role_content: str) -> List[BaseMessage]:
@@ -47,7 +62,6 @@ class LangChainLLMClient(ILLMClientRepository):
 
     def _parse_json_response(self, response_text: str) -> Dict[str, Any]:
         """JSON 응답 파싱"""
-        # 마크다운 코드 블록 제거
         cleaned = response_text.strip()
         if cleaned.startswith("```json"):
             cleaned = cleaned[7:]
@@ -68,6 +82,8 @@ class LangChainLLMClient(ILLMClientRepository):
         details: str,
     ) -> Dict[str, Any]:
         """커리큘럼 생성"""
+        logger.info("🔥 Starting curriculum generation with LangChain v3")
+
         prompt: str = CURRICULUM_GENERATION_PROMPT.format(
             goal=goal,
             period=period,
@@ -88,28 +104,20 @@ class LangChainLLMClient(ILLMClientRepository):
 
         messages = self._create_messages(prompt, role_content)
 
-        # 로깅 및 추적
-        operation_metadata = {
-            "goal": goal,
-            "period": period,
-            "difficulty": difficulty,
-            "model": self.model,
-        }
-
         logger.info(
-            f"Generating curriculum - Goal: {goal}, Period: {period}, Difficulty: {difficulty}"
+            f"🔥 Generating curriculum - Goal: {goal}, Period: {period}, Difficulty: {difficulty}"
         )
-
-        # Langfuse 이벤트 로깅 (선택적)
-        if langfuse_manager.is_enabled:
-            langfuse_manager.log_event(
-                name="curriculum_generation_start", metadata=operation_metadata
-            )
+        logger.info(f"🔥 Langfuse v3 enabled: {langfuse_manager.is_enabled}")
 
         try:
+            logger.info("🔥 Calling LLM with LangChain v3...")
+
+            # v3에서는 콜백핸들러가 자동으로 모든 추적 처리
             response = await self.llm.ainvoke(messages)
 
-            # response.content의 타입을 확인하고 문자열로 변환
+            logger.info("🔥 LLM call completed")
+
+            # response.content 처리
             response_text: str
             if isinstance(response.content, str):
                 response_text = response.content
@@ -120,29 +128,13 @@ class LangChainLLMClient(ILLMClientRepository):
 
             result = self._parse_json_response(response_text)
 
-            # 성공 로깅
-            if langfuse_manager.is_enabled:
-                langfuse_manager.log_event(
-                    name="curriculum_generation_success",
-                    metadata={
-                        **operation_metadata,
-                        "response_length": len(response_text),
-                        "success": True,
-                    },
-                )
+            logger.info("🔥 Curriculum generation completed successfully")
+            logger.info(f"🔥 Response length: {len(response_text)}")
 
-            logger.info("Curriculum generation completed successfully")
             return result
 
         except Exception as e:
-            # 실패 로깅
-            if langfuse_manager.is_enabled:
-                langfuse_manager.log_event(
-                    name="curriculum_generation_error",
-                    metadata={**operation_metadata, "error": str(e), "success": False},
-                )
-
-            logger.error(f"Curriculum generation failed: {e}")
+            logger.error(f"🔥 Curriculum generation failed: {e}")
             raise
 
     async def generate_feedback(
@@ -151,6 +143,8 @@ class LangChainLLMClient(ILLMClientRepository):
         summary_content: str,
     ) -> Dict[str, Any]:
         """피드백 생성"""
+        logger.info("🔥 Starting feedback generation with LangChain v3")
+
         prompt = FEEDBACK_GENERATION_PROMPT.format(
             lessons=", ".join(lessons), summary=summary_content
         )
@@ -165,27 +159,19 @@ class LangChainLLMClient(ILLMClientRepository):
 
         messages = self._create_messages(prompt, role_content)
 
-        # 로깅 및 추적
-        operation_metadata = {
-            "lessons_count": len(lessons),
-            "summary_length": len(summary_content),
-            "model": self.model,
-        }
-
         logger.info(
-            f"Generating feedback - Lessons count: {len(lessons)}, Summary length: {len(summary_content)}"
+            f"🔥 Generating feedback - Lessons count: {len(lessons)}, Summary length: {len(summary_content)}"
         )
 
-        # Langfuse 이벤트 로깅 (선택적)
-        if langfuse_manager.is_enabled:
-            langfuse_manager.log_event(
-                name="feedback_generation_start", metadata=operation_metadata
-            )
-
         try:
+            logger.info("🔥 Calling LLM with LangChain v3...")
+
+            # v3에서는 콜백핸들러가 자동으로 모든 추적 처리
             response = await self.llm.ainvoke(messages)
 
-            # response.content의 타입을 확인하고 문자열로 변환
+            logger.info("🔥 LLM call completed")
+
+            # response.content 처리
             response_text: str
             if isinstance(response.content, str):
                 response_text = response.content
@@ -196,27 +182,9 @@ class LangChainLLMClient(ILLMClientRepository):
 
             result = self._parse_json_response(response_text)
 
-            # 성공 로깅
-            if langfuse_manager.is_enabled:
-                langfuse_manager.log_event(
-                    name="feedback_generation_success",
-                    metadata={
-                        **operation_metadata,
-                        "score": result.get("score"),
-                        "success": True,
-                    },
-                )
-
-            logger.info("Feedback generation completed successfully")
+            logger.info("🔥 Feedback generation completed successfully")
             return result
 
         except Exception as e:
-            # 실패 로깅
-            if langfuse_manager.is_enabled:
-                langfuse_manager.log_event(
-                    name="feedback_generation_error",
-                    metadata={**operation_metadata, "error": str(e), "success": False},
-                )
-
-            logger.error(f"Feedback generation failed: {e}")
+            logger.error(f"🔥 Feedback generation failed: {e}")
             raise

@@ -1,19 +1,16 @@
 import logging
 from typing import Optional, Dict, Any
-from langfuse import Langfuse, get_client
-from app.core.config import get_settings
+import os
 from langfuse.langchain import CallbackHandler
-from typing import ContextManager
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
 
 class LangfuseManager:
-    """Langfuse 연동 관리 클래스"""
+    """Langfuse v3 연동 관리 클래스"""
 
     _instance: Optional["LangfuseManager"] = None
-    _langfuse_client: Optional[Langfuse] = None
+    _callback_handler: Optional[CallbackHandler] = None
 
     def __new__(cls) -> "LangfuseManager":
         if cls._instance is None:
@@ -26,124 +23,100 @@ class LangfuseManager:
 
         self._initialized = True
 
-        # Langfuse 클라이언트 초기화
-        if settings.langfuse_secret_key and settings.langfuse_public_key:
+        # 🔥 환경변수 검증
+        secret_key = os.getenv("LANGFUSE_SECRET_KEY")
+        public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
+        host = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
+
+        logger.info(f"🔥 Langfuse Host: {host}")
+        logger.info(f"🔥 Secret Key Present: {bool(secret_key)}")
+        logger.info(f"🔥 Public Key Present: {bool(public_key)}")
+
+        if secret_key:
+            logger.info(
+                f"🔥 Secret Key Format: {secret_key[:10]}...{secret_key[-4:] if len(secret_key) > 14 else ''}"
+            )
+        if public_key:
+            logger.info(
+                f"🔥 Public Key Format: {public_key[:10]}...{public_key[-4:] if len(public_key) > 14 else ''}"
+            )
+
+        # 키 형식 검증
+        if secret_key and not secret_key.startswith("sk-lf-"):
+            logger.error("🔥 Secret key should start with 'sk-lf-'")
+            return
+
+        if public_key and not public_key.startswith("pk-lf-"):
+            logger.error("🔥 Public key should start with 'pk-lf-'")
+            return
+
+        # Langfuse v3는 환경변수만 있으면 자동 초기화
+        if secret_key and public_key:
             try:
-                self._langfuse_client = Langfuse(
-                    secret_key=settings.langfuse_secret_key,
-                    public_key=settings.langfuse_public_key,
-                    host=settings.langfuse_host,
+                logger.info("🔥 Creating Langfuse v3 callback handler...")
+
+                # 환경변수 설정 확인
+                os.environ["LANGFUSE_SECRET_KEY"] = secret_key
+                os.environ["LANGFUSE_PUBLIC_KEY"] = public_key
+                os.environ["LANGFUSE_HOST"] = host
+
+                # v3에서는 환경변수만 있으면 자동으로 연결
+                self._callback_handler = CallbackHandler()
+
+                logger.info("🔥 Langfuse v3 initialized successfully")
+                logger.info(
+                    f"🔥 Callback handler created: {type(self._callback_handler)}"
                 )
-                try:
-                    get_client()
-                except Exception:
-                    pass
-                logger.info("Langfuse initialized successfully")
+
+                # 추가 설정 로깅
+                logger.info(f"🔥 Using host: {host}")
+
             except Exception as e:
-                logger.warning(f"Failed to initialize Langfuse: {e}")
-                self._langfuse_client = None
+                logger.error(f"🔥 Failed to initialize Langfuse v3: {e}")
+                logger.exception("🔥 Langfuse v3 initialization error details:")
+                self._callback_handler = None
         else:
-            logger.info("Langfuse keys not provided, skipping initialization")
+            logger.warning("🔥 Langfuse keys not provided or invalid format")
 
     @property
-    def client(self) -> Optional[Langfuse]:
-        return self._langfuse_client
-
-    @property
-    def callback_handler(self):
-        if not self.is_enabled:
-            return None
-        try:
-            # Langfuse v2.x 방식 - 키값들을 명시적으로 전달
-            return CallbackHandler()
-        except Exception as e:
-            logger.error(f"Failed to create callback handler: {e}")
-            return None
+    def callback_handler(self) -> Optional[CallbackHandler]:
+        """콜백 핸들러 반환"""
+        return self._callback_handler
 
     @property
     def is_enabled(self) -> bool:
-        return self._langfuse_client is not None
+        enabled = self._callback_handler is not None
+        return enabled
 
-    def create_trace(
-        self, name: str, metadata: Optional[Dict[str, Any]] = None
-    ) -> Optional[ContextManager[Any]]:
-        """
-        v3: 수동 트레이스 시작 = 컨텍스트 매니저 반환
-        사용 예:
-            with langfuse_manager.create_trace("process", {"user_id": "u1"}) as span:
-                ...
-        """
+    def test_connection(self):
+        """연결 테스트"""
         if not self.is_enabled:
-            return None
+            logger.warning("🔥 Langfuse not enabled for connection test")
+            return False
+
         try:
-            langfuse = get_client()
-            cm = langfuse.start_as_current_span(name=name)
+            # 간단한 테스트 이벤트 생성
+            from langfuse import Langfuse
 
-            class _TraceCM:
-                def __init__(self, inner_cm, md):
-                    self._cm = inner_cm
-                    self._md = md
-                    self._span = None
+            client = Langfuse()
 
-                def __enter__(self):
-                    span = self._cm.__enter__()
-                    self._span = span
-                    if self._md:
-                        # trace 레벨 속성 업데이트 (user_id/session_id/tags 등)
-                        span.update_trace(**self._md)
-                    return span
+            trace = client.trace(name="connection_test")
+            trace.event(name="test_event", metadata={"test": True})
+            client.flush()
 
-                def __exit__(self, exc_type, exc, tb):
-                    return self._cm.__exit__(exc_type, exc, tb)
-
-            return _TraceCM(cm, metadata)
-        except Exception as e:
-            logger.error(f"Failed to start Langfuse trace context: {e}")
-            return None
-
-    def log_event(self, name: str, metadata: Optional[Dict[str, Any]] = None):
-        """
-        v3 권장: '이벤트'를 짧은 자식 span으로 기록
-        (OTEL span.add_event는 현재 Langfuse에서 미표시 이슈가 있어 span 방식을 권장)
-        """
-        if not self.is_enabled:
-            return None
-        try:
-            langfuse = get_client()
-            with langfuse.start_as_current_span(name=f"event:{name}") as span:
-                # 메타데이터는 input/output/metadata 등 원하는 필드로 기록
-                if metadata:
-                    span.update(input=metadata)
+            logger.info("🔥 Connection test successful")
             return True
+
         except Exception as e:
-            logger.error(f"Failed to log event to Langfuse: {e}")
-            return None
-
-    def flush(self):
-        """Langfuse 데이터 플러시"""
-        if self.is_enabled and self._langfuse_client is not None:
-            try:
-                if hasattr(self._langfuse_client, "flush"):
-                    self._langfuse_client.flush()
-                    logger.debug("Langfuse data flushed successfully")
-                else:
-                    logger.debug("Langfuse flush method not available")
-            except Exception as e:
-                logger.error(f"Failed to flush Langfuse data: {e}")
-
-    def get_available_methods(self):
-        """디버깅용: 사용 가능한 Langfuse 메서드 확인"""
-        if not self.is_enabled or self._langfuse_client is None:
-            return []
-
-        methods = [
-            method
-            for method in dir(self._langfuse_client)
-            if not method.startswith("_")
-        ]
-        logger.info(f"Available Langfuse methods: {methods}")
-        return methods
+            logger.error(f"🔥 Connection test failed: {e}")
+            return False
 
 
 # 전역 인스턴스
+logger.info("🔥 Creating Langfuse v3 manager instance...")
 langfuse_manager = LangfuseManager()
+logger.info(f"🔥 Langfuse v3 manager created, enabled: {langfuse_manager.is_enabled}")
+
+# 연결 테스트 실행
+if langfuse_manager.is_enabled:
+    langfuse_manager.test_connection()

@@ -169,6 +169,8 @@ class CurriculumService:
         self,
         command: GenerateCurriculumCommand,
     ) -> CurriculumDTO:
+        print(f"🔥🔥🔥 LLM Client Type: {type(self.llm_client).__name__}")
+        print(f"🔥🔥🔥 LLM Client Module: {type(self.llm_client).__module__}")
 
         count: int = await self.curriculum_repo.count_by_owner(command.owner_id)
         if count >= 10:

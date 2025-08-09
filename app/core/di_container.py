@@ -112,6 +112,7 @@ class Container(containers.DeclarativeContainer):
         # OpenAILLMClient,
         LangChainLLMClient,
         api_key=config.provided.llm_api_key,
+        model="gpt-4o-mini",
     )
 
     # Social
