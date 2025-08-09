@@ -54,7 +54,7 @@ class LangfuseManager:
         if not self.is_enabled:
             return None
         try:
-            # v3: 무인자
+            # Langfuse v2.x 방식 - 키값들을 명시적으로 전달
             return CallbackHandler()
         except Exception as e:
             logger.error(f"Failed to create callback handler: {e}")

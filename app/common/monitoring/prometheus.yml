@@ -13,6 +13,12 @@ scrape_configs:
 
   - job_name: 'fastapi-app'
     static_configs:
-      - targets: ['app:8000']  # Docker 네트워크 내에서 접근
+      - targets: ['app:8000']  # FastAPI 애플리케이션 메트릭 엔드포인트
     scrape_interval: 5s
     metrics_path: /metrics
+    
+  - job_name: 'fastapi-metrics-server'
+    static_configs:
+      - targets: ['app:8001']  # Prometheus 클라이언트 서버
+    scrape_interval: 5s
+    metrics_path: /
