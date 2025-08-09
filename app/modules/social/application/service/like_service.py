@@ -16,6 +16,7 @@ from app.modules.social.domain.entity.like import Like
 from app.modules.social.domain.repository.like_repo import ILikeRepository
 from app.modules.social.domain.service.social_domain_service import SocialDomainService
 from app.modules.user.domain.vo.role import RoleVO
+from app.common.monitoring.metrics import increment_like_creation
 
 
 class LikeService:
@@ -57,6 +58,7 @@ class LikeService:
         )
 
         await self.like_repo.save(like)
+        increment_like_creation()
         return LikeDTO.from_domain(like)
 
     async def delete_like(

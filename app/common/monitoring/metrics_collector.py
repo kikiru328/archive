@@ -1,6 +1,6 @@
 import asyncio
-import logging
 from datetime import datetime, timedelta, timezone
+import logging
 from typing import Optional
 
 from sqlalchemy import func, select
@@ -12,7 +12,6 @@ from app.common.monitoring.metrics import (
     set_total_users,
     set_total_curriculums,
     set_public_curriculums,
-    set_private_curriculums,
     set_total_summaries,
     set_total_feedbacks,
     set_average_completion_rate,
@@ -25,6 +24,18 @@ from app.common.monitoring.metrics import (
     set_total_curriculum_categories,
     set_popular_tags,
     set_average_tags_per_curriculum,
+    set_total_likes,
+    set_likes_per_curriculum,
+    set_total_bookmarks,
+    set_bookmarks_per_user,
+    set_total_comments,
+    set_comments_per_curriculum,
+    set_total_follows,
+    set_followers_per_user,
+    set_active_social_users,
+    set_social_engagement_rate,
+    set_db_connection_metrics,
+    set_cache_hit_ratio,
 )
 from app.modules.user.infrastructure.db_model.user import UserModel
 from app.modules.curriculum.infrastructure.db_model.curriculum import CurriculumModel
@@ -36,6 +47,10 @@ from app.modules.taxonomy.infrastructure.db_model.curriculum_tag import (
     CurriculumTagModel,
     CurriculumCategoryModel,
 )
+from app.modules.social.infrastructure.db_model.like import LikeModel
+from app.modules.social.infrastructure.db_model.bookmark import BookmarkModel
+from app.modules.social.infrastructure.db_model.comment import CommentModel
+from app.modules.social.infrastructure.db_model.follow import FollowModel
 
 logger = logging.getLogger(__name__)
 
@@ -110,9 +125,6 @@ class MetricsService:
             public_curriculums = await self._get_public_curriculums()
             set_public_curriculums(public_curriculums)
 
-            private_curriculums = await self._get_private_curriculums()
-            set_private_curriculums(private_curriculums)
-
             # 학습 메트릭
             total_summaries = await self._get_total_summaries()
             set_total_summaries(total_summaries)
@@ -152,14 +164,55 @@ class MetricsService:
             avg_tags_per_curriculum = await self._get_average_tags_per_curriculum()
             set_average_tags_per_curriculum(avg_tags_per_curriculum)
 
+            total_likes = await self._get_total_likes()
+            set_total_likes(total_likes)
+
+            likes_per_curriculum = await self._get_likes_per_curriculum()
+            set_likes_per_curriculum(likes_per_curriculum)
+
+            # Bookmark 메트릭
+            total_bookmarks = await self._get_total_bookmarks()
+            set_total_bookmarks(total_bookmarks)
+
+            bookmarks_per_user = await self._get_bookmarks_per_user()
+            set_bookmarks_per_user(bookmarks_per_user)
+
+            # Comment 메트릭
+            total_comments = await self._get_total_comments()
+            set_total_comments(total_comments)
+
+            comments_per_curriculum = await self._get_comments_per_curriculum()
+            set_comments_per_curriculum(comments_per_curriculum)
+
+            # Follow 메트릭
+            total_follows = await self._get_total_follows()
+            set_total_follows(total_follows)
+
+            followers_per_user = await self._get_followers_per_user()
+            set_followers_per_user(followers_per_user)
+
+            # Social Engagement 메트릭
+            active_social_users = await self._get_active_social_users()
+            set_active_social_users(active_social_users)
+
+            engagement_rate = await self._get_social_engagement_rate(
+                total_users, active_social_users
+            )
+            set_social_engagement_rate(engagement_rate)
+
+            # DB 연결 풀 메트릭
+            await self._update_db_connection_metrics()
+
+            # Redis 캐시 메트릭
+            await self._update_cache_metrics()
+
             logger.debug(
                 f"Metrics updated - Users: {total_users} (active: {active_users}), "
-                f"Curriculums: {total_curriculums} (public: {public_curriculums}, private: {private_curriculums}), "
-                f"Learning: {total_summaries} summaries, {total_feedbacks} feedbacks, "
-                f"Avg completion: {avg_completion_rate:.1f}%, Avg score: {avg_feedback_score:.1f}, "
-                f"Active learners: {active_learners}, "
-                f"Taxonomy: {total_tags} tags, {total_categories} categories ({active_categories} active), "
-                f"Connections: {total_curriculum_tags} tag-assignments, {total_curriculum_categories} category-assignments"
+                + f"Curriculums: {total_curriculums} (public: {public_curriculums} "
+                + f"Learning: {total_summaries} summaries, {total_feedbacks} feedbacks, "
+                + f"Avg completion: {avg_completion_rate:.1f}%, Avg score: {avg_feedback_score:.1f}, "
+                + f"Taxonomy: {total_tags} tags, {total_categories} categories ({active_categories} active), "
+                + f"Connections: {total_curriculum_tags} tag-assignments, {total_curriculum_categories} category-assignments"
             )
 
         except Exception as e:
@@ -343,7 +396,7 @@ class MetricsService:
         query = (
             select(func.count())
             .select_from(CategoryModel)
-            .where(CategoryModel.is_active == True)
+            .where(CategoryModel.is_active)
         )
         result = await self.session.execute(query)
         return result.scalar_one()
@@ -395,3 +448,204 @@ class MetricsService:
         except Exception as e:
             logger.error(f"Error calculating average tags per curriculum: {e}")
             return 0.0
+
+    async def _get_total_likes(self) -> int:
+        """전체 좋아요 수 조회"""
+        try:
+            query = select(func.count()).select_from(LikeModel)
+            result = await self.session.execute(query)
+            return result.scalar_one()
+        except Exception as e:
+            logger.error(f"Error getting total likes: {e}")
+            return 0
+
+    async def _get_likes_per_curriculum(self) -> float:
+        """커리큘럼당 평균 좋아요 수 조회"""
+        try:
+            query = (
+                select(func.count(LikeModel.id).label("like_count"))
+                .select_from(CurriculumModel.outerjoin(LikeModel))
+                .group_by(CurriculumModel.id)
+            )
+            result = await self.session.execute(query)
+            like_counts = [row.like_count for row in result.fetchall()]
+
+            if not like_counts:
+                return 0.0
+
+            return sum(like_counts) / len(like_counts)
+        except Exception as e:
+            logger.error(f"Error calculating likes per curriculum: {e}")
+            return 0.0
+
+    async def _get_total_bookmarks(self) -> int:
+        """전체 북마크 수 조회"""
+        try:
+            query = select(func.count()).select_from(BookmarkModel)
+            result = await self.session.execute(query)
+            return result.scalar_one()
+        except Exception as e:
+            logger.error(f"Error getting total bookmarks: {e}")
+            return 0
+
+    async def _get_bookmarks_per_user(self) -> float:
+        """사용자당 평균 북마크 수 조회"""
+        try:
+            query = (
+                select(func.count(BookmarkModel.id).label("bookmark_count"))
+                .select_from(UserModel.outerjoin(BookmarkModel))
+                .group_by(UserModel.id)
+            )
+            result = await self.session.execute(query)
+            bookmark_counts = [row.bookmark_count for row in result.fetchall()]
+
+            if not bookmark_counts:
+                return 0.0
+
+            return sum(bookmark_counts) / len(bookmark_counts)
+        except Exception as e:
+            logger.error(f"Error calculating bookmarks per user: {e}")
+            return 0.0
+
+    async def _get_total_comments(self) -> int:
+        """전체 댓글 수 조회"""
+        try:
+            query = select(func.count()).select_from(CommentModel)
+            result = await self.session.execute(query)
+            return result.scalar_one()
+        except Exception as e:
+            logger.error(f"Error getting total comments: {e}")
+            return 0
+
+    async def _get_comments_per_curriculum(self) -> float:
+        """커리큘럼당 평균 댓글 수 조회"""
+        try:
+            query = (
+                select(func.count(CommentModel.id).label("comment_count"))
+                .select_from(CurriculumModel.outerjoin(CommentModel))
+                .group_by(CurriculumModel.id)
+            )
+            result = await self.session.execute(query)
+            comment_counts = [row.comment_count for row in result.fetchall()]
+
+            if not comment_counts:
+                return 0.0
+
+            return sum(comment_counts) / len(comment_counts)
+        except Exception as e:
+            logger.error(f"Error calculating comments per curriculum: {e}")
+            return 0.0
+
+    async def _get_total_follows(self) -> int:
+        """전체 팔로우 관계 수 조회"""
+        try:
+            query = select(func.count()).select_from(FollowModel)
+            result = await self.session.execute(query)
+            return result.scalar_one()
+        except Exception as e:
+            logger.error(f"Error getting total follows: {e}")
+            return 0
+
+    async def _get_followers_per_user(self) -> float:
+        """사용자당 평균 팔로워 수 조회"""
+        try:
+            query = (
+                select(func.count(FollowModel.id).label("follower_count"))
+                .select_from(
+                    UserModel.outerjoin(
+                        FollowModel, UserModel.id == FollowModel.followee_id
+                    )
+                )
+                .group_by(UserModel.id)
+            )
+            result = await self.session.execute(query)
+            follower_counts = [row.follower_count for row in result.fetchall()]
+
+            if not follower_counts:
+                return 0.0
+
+            return sum(follower_counts) / len(follower_counts)
+        except Exception as e:
+            logger.error(f"Error calculating followers per user: {e}")
+            return 0.0
+
+    async def _get_active_social_users(self) -> int:
+        """최근 7일간 소셜 활동을 한 사용자 수 조회"""
+        try:
+            seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+
+            # 최근 7일간 좋아요, 댓글, 북마크, 팔로우 중 하나라도 한 사용자들
+            like_users = select(LikeModel.user_id).where(
+                LikeModel.created_at >= seven_days_ago
+            )
+            comment_users = select(CommentModel.user_id).where(
+                CommentModel.created_at >= seven_days_ago
+            )
+            bookmark_users = select(BookmarkModel.user_id).where(
+                BookmarkModel.created_at >= seven_days_ago
+            )
+            follow_users = select(FollowModel.follower_id).where(
+                FollowModel.created_at >= seven_days_ago
+            )
+
+            # UNION으로 합치고 DISTINCT로 중복 제거
+            active_users_query = like_users.union(
+                comment_users, bookmark_users, follow_users
+            )
+            distinct_users_query = select(
+                func.count(func.distinct(active_users_query.c.user_id))
+            )
+
+            result = await self.session.execute(distinct_users_query)
+            return result.scalar_one() or 0
+
+        except Exception as e:
+            logger.error(f"Error calculating active social users: {e}")
+            return 0
+
+    async def _get_social_engagement_rate(
+        self, total_users: int, active_social_users: int
+    ) -> float:
+        """소셜 참여율 계산"""
+        if total_users == 0:
+            return 0.0
+        return (active_social_users / total_users) * 100
+
+    # ========================= SYSTEM METRICS 메서드들 =========================
+
+    async def _update_db_connection_metrics(self) -> None:
+        """DB 연결 풀 메트릭 업데이트"""
+        try:
+            # SQLAlchemy 연결 풀 정보 가져오기
+            pool = self.session.get_bind().pool
+
+            pool_size = pool.size()
+            checked_out = pool.checkedout()
+            overflow = pool.overflow()
+
+            set_db_connection_metrics(pool_size, checked_out, overflow)
+
+        except Exception as e:
+            logger.error(f"Error updating DB connection metrics: {e}")
+
+    async def _update_cache_metrics(self) -> None:
+        """캐시 메트릭 업데이트"""
+        try:
+            if not self.redis_client.redis:
+                return
+
+            # Redis 정보 가져오기
+            info = await self.redis_client.redis.info()
+
+            # 캐시 적중률 계산 (keyspace_hits / (keyspace_hits + keyspace_misses))
+            hits = info.get("keyspace_hits", 0)
+            misses = info.get("keyspace_misses", 0)
+
+            if hits + misses > 0:
+                hit_ratio = (hits / (hits + misses)) * 100
+                set_cache_hit_ratio(hit_ratio)
+            else:
+                set_cache_hit_ratio(0.0)
+
+        except Exception as e:
+            logger.error(f"Error updating cache metrics: {e}")

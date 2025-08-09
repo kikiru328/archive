@@ -18,6 +18,7 @@ from app.modules.social.domain.repository.comment_repo import ICommentRepository
 from app.modules.social.domain.service.social_domain_service import SocialDomainService
 from app.modules.social.domain.vo.comment_content import CommentContent
 from app.modules.user.domain.vo.role import RoleVO
+from app.common.monitoring.metrics import increment_comment_creation
 
 
 class CommentService:
@@ -55,6 +56,7 @@ class CommentService:
             raise InvalidCommentContentError(str(e))
 
         await self.comment_repo.save(comment)
+        increment_comment_creation()
         return CommentDTO.from_domain(comment)
 
     async def update_comment(

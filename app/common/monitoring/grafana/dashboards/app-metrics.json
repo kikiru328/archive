@@ -1,8 +1,8 @@
 {
   "dashboard": {
     "id": null,
-    "title": "Application Metrics",
-    "tags": ["fastapi", "application"],
+    "title": "Application Metrics - Enhanced",
+    "tags": ["fastapi", "application", "social", "performance"],
     "timezone": "browser",
     "refresh": "30s",
     "time": {
@@ -18,402 +18,7 @@
           {
             "expr": "total_users",
             "refId": "A"
-          {
-        "id": 9,
-        "title": "Learning Metrics Overview",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "total_summaries",
-            "refId": "A",
-            "legendFormat": "Total Summaries"
-          {
-        "id": 13,
-        "title": "Taxonomy Metrics Overview",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "total_tags",
-            "refId": "A",
-            "legendFormat": "Total Tags"
-          },
-          {
-            "expr": "total_categories",
-            "refId": "B",
-            "legendFormat": "Total Categories"
-          },
-          {
-            "expr": "active_categories",
-            "refId": "C",
-            "legendFormat": "Active Categories"
-          },
-          {
-            "expr": "popular_tags",
-            "refId": "D",
-            "legendFormat": "Popular Tags"
           }
-        ],
-        "gridPos": {
-          "h": 6,
-          "w": 12,
-          "x": 0,
-          "y": 52
-        },
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "palette-classic"
-            },
-            "unit": "short"
-          }
-        }
-      },
-      {
-        "id": 14,
-        "title": "Curriculum Connections",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "total_curriculum_tags",
-            "refId": "A",
-            "legendFormat": "Tag Connections"
-          },
-          {
-            "expr": "total_curriculum_categories",
-            "refId": "B",
-            "legendFormat": "Category Connections"
-          },
-          {
-            "expr": "average_tags_per_curriculum",
-            "refId": "C",
-            "legendFormat": "Avg Tags/Curriculum"
-          }
-        ],
-        "gridPos": {
-          "h": 6,
-          "w": 12,
-          "x": 12,
-          "y": 52
-        },
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "thresholds"
-            },
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "yellow",
-                  "value": 3
-                },
-                {
-                  "color": "red",
-                  "value": 8
-                }
-              ]
-            },
-            "unit": "short"
-          }
-        }
-      },
-      {
-        "id": 15,
-        "title": "Taxonomy Usage Over Time",
-        "type": "timeseries",
-        "targets": [
-          {
-            "expr": "total_tags",
-            "refId": "A",
-            "legendFormat": "Total Tags"
-          },
-          {
-            "expr": "total_categories",
-            "refId": "B",
-            "legendFormat": "Total Categories"
-          },
-          {
-            "expr": "total_curriculum_tags",
-            "refId": "C",
-            "legendFormat": "Tag Connections"
-          },
-          {
-            "expr": "total_curriculum_categories",
-            "refId": "D",
-            "legendFormat": "Category Connections"
-          }
-        ],
-        "gridPos": {
-          "h": 8,
-          "w": 24,
-          "x": 0,
-          "y": 58
-        },
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "palette-classic"
-            },
-            "unit": "short"
-          }
-        }
-      },
-      {
-        "id": 16,
-        "title": "Taxonomy Creation Rates",
-        "type": "timeseries",
-        "targets": [
-          {
-            "expr": "rate(tag_creations_total[1m])",
-            "refId": "A",
-            "legendFormat": "Tag Creations/sec"
-          },
-          {
-            "expr": "rate(curriculum_tag_assignments_total[1m])",
-            "refId": "B",
-            "legendFormat": "Tag Assignments/sec"
-          },
-          {
-            "expr": "rate(curriculum_category_assignments_total[1m])",
-            "refId": "C",
-            "legendFormat": "Category Assignments/sec"
-          }
-        ],
-        "gridPos": {
-          "h": 8,
-          "w": 24,
-          "x": 0,
-          "y": 66
-        },
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "palette-classic"
-            },
-            "unit": "reqps"
-          }
-        }
-      },
-      {
-        "id": 17,
-        "title": "Category Status Distribution",
-        "type": "piechart",
-        "targets": [
-          {
-            "expr": "active_categories",
-            "refId": "A",
-            "legendFormat": "Active"
-          },
-          {
-            "expr": "total_categories - active_categories",
-            "refId": "B",
-            "legendFormat": "Inactive"
-          }
-        ],
-        "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 0,
-          "y": 74
-        },
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "palette-classic"
-            },
-            "unit": "short"
-          }
-        }
-      },
-      {
-        "id": 18,
-        "title": "Tag Popularity Distribution",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "popular_tags",
-            "refId": "A",
-            "legendFormat": "Popular Tags (≥10 uses)"
-          },
-          {
-            "expr": "total_tags - popular_tags",
-            "refId": "B",
-            "legendFormat": "Regular Tags (<10 uses)"
-          }
-        ],
-        "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 12,
-          "y": 74
-        },
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "thresholds"
-            },
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "blue",
-                  "value": null
-                },
-                {
-                  "color": "green",
-                  "value": 10
-                }
-              ]
-            },
-            "unit": "short"
-          }
-        }
-      },
-          {
-            "expr": "total_feedbacks",
-            "refId": "B",
-            "legendFormat": "Total Feedbacks"
-          },
-          {
-            "expr": "active_learners",
-            "refId": "C",
-            "legendFormat": "Active Learners"
-          }
-        ],
-        "gridPos": {
-          "h": 6,
-          "w": 12,
-          "x": 0,
-          "y": 30
-        },
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "palette-classic"
-            },
-            "unit": "short"
-          }
-        }
-      },
-      {
-        "id": 10,
-        "title": "Learning Quality Metrics",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "average_completion_rate",
-            "refId": "A",
-            "legendFormat": "Avg Completion %"
-          },
-          {
-            "expr": "average_feedback_score",
-            "refId": "B",
-            "legendFormat": "Avg Score"
-          }
-        ],
-        "gridPos": {
-          "h": 6,
-          "w": 12,
-          "x": 12,
-          "y": 30
-        },
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "thresholds"
-            },
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "red",
-                  "value": 0
-                },
-                {
-                  "color": "yellow",
-                  "value": 50
-                },
-                {
-                  "color": "green",
-                  "value": 70
-                }
-              ]
-            },
-            "unit": "percent"
-          }
-        }
-      },
-      {
-        "id": 11,
-        "title": "Learning Activity Over Time",
-        "type": "timeseries",
-        "targets": [
-          {
-            "expr": "total_summaries",
-            "refId": "A",
-            "legendFormat": "Total Summaries"
-          },
-          {
-            "expr": "total_feedbacks",
-            "refId": "B",
-            "legendFormat": "Total Feedbacks"
-          },
-          {
-            "expr": "active_learners",
-            "refId": "C",
-            "legendFormat": "Active Learners (7 days)"
-          }
-        ],
-        "gridPos": {
-          "h": 8,
-          "w": 24,
-          "x": 0,
-          "y": 36
-        },
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "palette-classic"
-            },
-            "unit": "short"
-          }
-        }
-      },
-      {
-        "id": 12,
-        "title": "Creation Rates",
-        "type": "timeseries",
-        "targets": [
-          {
-            "expr": "rate(summary_creations_total[1m])",
-            "refId": "A",
-            "legendFormat": "Summary Creations/sec"
-          },
-          {
-            "expr": "rate(feedback_creations_total[1m])",
-            "refId": "B",
-            "legendFormat": "Feedback Creations/sec"
-          }
-        ],
-        "gridPos": {
-          "h": 8,
-          "w": 24,
-          "x": 0,
-          "y": 44
-        },
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "palette-classic"
-            },
-            "unit": "reqps"
-          }
-        }
-      }
         ],
         "gridPos": {
           "h": 6,
@@ -673,6 +278,839 @@
               "mode": "palette-classic"
             },
             "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "Learning Metrics Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "total_summaries",
+            "refId": "A",
+            "legendFormat": "Total Summaries"
+          },
+          {
+            "expr": "total_feedbacks",
+            "refId": "B",
+            "legendFormat": "Total Feedbacks"
+          },
+          {
+            "expr": "active_learners",
+            "refId": "C",
+            "legendFormat": "Active Learners"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 30
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Learning Quality Metrics",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "average_completion_rate",
+            "refId": "A",
+            "legendFormat": "Avg Completion %"
+          },
+          {
+            "expr": "average_feedback_score",
+            "refId": "B",
+            "legendFormat": "Avg Score"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 12,
+          "y": 30
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 50
+                },
+                {
+                  "color": "green",
+                  "value": 70
+                }
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "Learning Activity Over Time",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "total_summaries",
+            "refId": "A",
+            "legendFormat": "Total Summaries"
+          },
+          {
+            "expr": "total_feedbacks",
+            "refId": "B",
+            "legendFormat": "Total Feedbacks"
+          },
+          {
+            "expr": "active_learners",
+            "refId": "C",
+            "legendFormat": "Active Learners (7 days)"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 36
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 12,
+        "title": "Learning Creation Rates",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(summary_creations_total[1m])",
+            "refId": "A",
+            "legendFormat": "Summary Creations/sec"
+          },
+          {
+            "expr": "rate(feedback_creations_total[1m])",
+            "refId": "B",
+            "legendFormat": "Feedback Creations/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 44
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 13,
+        "title": "Taxonomy Metrics Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "total_tags",
+            "refId": "A",
+            "legendFormat": "Total Tags"
+          },
+          {
+            "expr": "total_categories",
+            "refId": "B",
+            "legendFormat": "Total Categories"
+          },
+          {
+            "expr": "active_categories",
+            "refId": "C",
+            "legendFormat": "Active Categories"
+          },
+          {
+            "expr": "popular_tags",
+            "refId": "D",
+            "legendFormat": "Popular Tags"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 52
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 14,
+        "title": "Curriculum Connections",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "total_curriculum_tags",
+            "refId": "A",
+            "legendFormat": "Tag Connections"
+          },
+          {
+            "expr": "total_curriculum_categories",
+            "refId": "B",
+            "legendFormat": "Category Connections"
+          },
+          {
+            "expr": "average_tags_per_curriculum",
+            "refId": "C",
+            "legendFormat": "Avg Tags/Curriculum"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 12,
+          "y": 52
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 3
+                },
+                {
+                  "color": "red",
+                  "value": 8
+                }
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 15,
+        "title": "Taxonomy Usage Over Time",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "total_tags",
+            "refId": "A",
+            "legendFormat": "Total Tags"
+          },
+          {
+            "expr": "total_categories",
+            "refId": "B",
+            "legendFormat": "Total Categories"
+          },
+          {
+            "expr": "total_curriculum_tags",
+            "refId": "C",
+            "legendFormat": "Tag Connections"
+          },
+          {
+            "expr": "total_curriculum_categories",
+            "refId": "D",
+            "legendFormat": "Category Connections"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 58
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 16,
+        "title": "Taxonomy Creation Rates",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(tag_creations_total[1m])",
+            "refId": "A",
+            "legendFormat": "Tag Creations/sec"
+          },
+          {
+            "expr": "rate(curriculum_tag_assignments_total[1m])",
+            "refId": "B",
+            "legendFormat": "Tag Assignments/sec"
+          },
+          {
+            "expr": "rate(curriculum_category_assignments_total[1m])",
+            "refId": "C",
+            "legendFormat": "Category Assignments/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 66
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 17,
+        "title": "Category Status Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "active_categories",
+            "refId": "A",
+            "legendFormat": "Active"
+          },
+          {
+            "expr": "total_categories - active_categories",
+            "refId": "B",
+            "legendFormat": "Inactive"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 74
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 18,
+        "title": "Tag Popularity Distribution",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "popular_tags",
+            "refId": "A",
+            "legendFormat": "Popular Tags (≥10 uses)"
+          },
+          {
+            "expr": "total_tags - popular_tags",
+            "refId": "B",
+            "legendFormat": "Regular Tags (<10 uses)"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 74
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "blue",
+                  "value": null
+                },
+                {
+                  "color": "green",
+                  "value": 10
+                }
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 19,
+        "title": "Social Metrics Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "total_likes",
+            "refId": "A",
+            "legendFormat": "Total Likes"
+          },
+          {
+            "expr": "total_bookmarks",
+            "refId": "B",
+            "legendFormat": "Total Bookmarks"
+          },
+          {
+            "expr": "total_comments",
+            "refId": "C",
+            "legendFormat": "Total Comments"
+          },
+          {
+            "expr": "total_follows",
+            "refId": "D",
+            "legendFormat": "Total Follows"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 82
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 20,
+        "title": "Social Engagement Metrics",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "active_social_users",
+            "refId": "A",
+            "legendFormat": "Active Social Users (7d)"
+          },
+          {
+            "expr": "social_engagement_rate",
+            "refId": "B",
+            "legendFormat": "Engagement Rate %"
+          },
+          {
+            "expr": "likes_per_curriculum_avg",
+            "refId": "C",
+            "legendFormat": "Avg Likes/Curriculum"
+          },
+          {
+            "expr": "bookmarks_per_user_avg",
+            "refId": "D",
+            "legendFormat": "Avg Bookmarks/User"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 88
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 10
+                },
+                {
+                  "color": "green",
+                  "value": 50
+                }
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 21,
+        "title": "Social Activity Over Time",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "total_likes",
+            "refId": "A",
+            "legendFormat": "Total Likes"
+          },
+          {
+            "expr": "total_bookmarks",
+            "refId": "B",
+            "legendFormat": "Total Bookmarks"
+          },
+          {
+            "expr": "total_comments",
+            "refId": "C",
+            "legendFormat": "Total Comments"
+          },
+          {
+            "expr": "total_follows",
+            "refId": "D",
+            "legendFormat": "Total Follows"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 94
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 22,
+        "title": "Social Creation Rates",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(like_creations_total[1m])",
+            "refId": "A",
+            "legendFormat": "Like Creations/sec"
+          },
+          {
+            "expr": "rate(bookmark_creations_total[1m])",
+            "refId": "B",
+            "legendFormat": "Bookmark Creations/sec"
+          },
+          {
+            "expr": "rate(comment_creations_total[1m])",
+            "refId": "C",
+            "legendFormat": "Comment Creations/sec"
+          },
+          {
+            "expr": "rate(follow_creations_total[1m])",
+            "refId": "D",
+            "legendFormat": "Follow Creations/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 102
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 23,
+        "title": "Database Performance Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "db_connection_pool_size",
+            "refId": "A",
+            "legendFormat": "Pool Size"
+          },
+          {
+            "expr": "db_connection_pool_checked_out",
+            "refId": "B",
+            "legendFormat": "Connections Used"
+          },
+          {
+            "expr": "db_connection_pool_overflow",
+            "refId": "C",
+            "legendFormat": "Overflow Connections"
+          },
+          {
+            "expr": "cache_hit_ratio",
+            "refId": "D",
+            "legendFormat": "Cache Hit Ratio %"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 110
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 70
+                },
+                {
+                  "color": "green",
+                  "value": 90
+                }
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 24,
+        "title": "Database Query Performance",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(db_query_duration_seconds_bucket[5m]))",
+            "refId": "B",
+            "legendFormat": "50th percentile"
+          },
+          {
+            "expr": "rate(db_query_duration_seconds_sum[5m]) / rate(db_query_duration_seconds_count[5m])",
+            "refId": "C",
+            "legendFormat": "Average"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 116
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 25,
+        "title": "API Response Times",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(api_request_duration_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(api_request_duration_seconds_bucket[5m]))",
+            "refId": "B",
+            "legendFormat": "50th percentile"
+          },
+          {
+            "expr": "rate(api_request_duration_seconds_sum[5m]) / rate(api_request_duration_seconds_count[5m])",
+            "refId": "C",
+            "legendFormat": "Average"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 116
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 26,
+        "title": "Error Rates by Module",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(application_errors_total{module=\"database\"}[5m])",
+            "refId": "A",
+            "legendFormat": "Database Errors"
+          },
+          {
+            "expr": "rate(application_errors_total{module=\"api\"}[5m])",
+            "refId": "B",
+            "legendFormat": "API Errors"
+          },
+          {
+            "expr": "rate(application_errors_total{module=\"redis\"}[5m])",
+            "refId": "C",
+            "legendFormat": "Redis Errors"
+          },
+          {
+            "expr": "rate(application_errors_total{module=\"social\"}[5m])",
+            "refId": "D",
+            "legendFormat": "Social Errors"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 124
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 27,
+        "title": "Redis Performance",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(redis_operation_duration_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "95th percentile duration"
+          },
+          {
+            "expr": "rate(redis_operations_total{status=\"success\"}[5m])",
+            "refId": "B",
+            "legendFormat": "Successful Ops/sec"
+          },
+          {
+            "expr": "rate(redis_operations_total{status=\"error\"}[5m])",
+            "refId": "C",
+            "legendFormat": "Error Ops/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 132
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 28,
+        "title": "Social Interaction Heatmap",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "comments_per_curriculum_avg",
+            "refId": "A",
+            "legendFormat": "Avg Comments/Curriculum"
+          },
+          {
+            "expr": "followers_per_user_avg",
+            "refId": "B",
+            "legendFormat": "Avg Followers/User"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 132
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 5
+                },
+                {
+                  "color": "red",
+                  "value": 15
+                }
+              ]
+            },
+            "unit": "short"
           }
         }
       }

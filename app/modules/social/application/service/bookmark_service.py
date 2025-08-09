@@ -16,6 +16,7 @@ from app.modules.social.domain.entity.bookmark import Bookmark
 from app.modules.social.domain.repository.bookmark_repo import IBookmarkRepository
 from app.modules.social.domain.service.social_domain_service import SocialDomainService
 from app.modules.user.domain.vo.role import RoleVO
+from app.common.monitoring.metrics import increment_bookmark_creation
 
 
 class BookmarkService:
@@ -61,6 +62,7 @@ class BookmarkService:
         )
 
         await self.bookmark_repo.save(bookmark)
+        increment_bookmark_creation()
         return BookmarkDTO.from_domain(bookmark)
 
     async def delete_bookmark(
