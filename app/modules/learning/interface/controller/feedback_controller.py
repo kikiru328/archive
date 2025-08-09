@@ -193,7 +193,7 @@ async def get_feedbacks_by_curriculum(
 
 
 # 사용자별 피드백 관련 엔드포인트
-user_feedback_router = APIRouter(prefix="/users/me/feedbacks", tags=["User Feedbacks"])
+user_feedback_router = APIRouter(prefix="/users/me/feedbacks", tags=["Users"])
 
 
 @user_feedback_router.get(

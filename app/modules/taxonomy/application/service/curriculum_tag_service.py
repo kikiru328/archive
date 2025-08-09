@@ -1,6 +1,7 @@
 from typing import List
 from ulid import ULID  # type: ignore
 
+from app.modules.curriculum.application.exception import CurriculumNotFoundError
 from app.modules.curriculum.domain.entity.curriculum import Curriculum
 from app.modules.taxonomy.application.dto.tag_dto import (
     AddTagsToCurriculumCommand,
@@ -11,7 +12,6 @@ from app.modules.taxonomy.application.dto.tag_dto import (
     CurriculumTagsDTO,
 )
 from app.modules.taxonomy.application.exception import (
-    CurriculumNotFoundError,
     TagAccessDeniedError,
     CategoryAccessDeniedError,
     TagLimitExceededError,

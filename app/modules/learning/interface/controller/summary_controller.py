@@ -175,7 +175,7 @@ async def delete_summary(
     )
 
 
-user_summary_router = APIRouter(prefix="/users/me/summaries", tags=["User Summaries"])
+user_summary_router = APIRouter(prefix="/users/me/summaries", tags=["Users"])
 
 
 @user_summary_router.get(

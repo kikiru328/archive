@@ -26,12 +26,10 @@ from app.modules.taxonomy.interface.schema.tag_schema import (
 from app.modules.user.domain.vo.role import RoleVO
 
 
-curriculum_tag_router = APIRouter(
-    prefix="/curriculums", tags=["Curriculum Tags & Categories"]
-)
+taxonomy_router = APIRouter(prefix="/curriculums", tags=["Taxonomies"])
 
 
-@curriculum_tag_router.post(
+@taxonomy_router.post(
     "/{curriculum_id}/tags",
     response_model=List[TagBriefResponse],
     status_code=status.HTTP_201_CREATED,
@@ -55,7 +53,7 @@ async def add_tags_to_curriculum(
     return [TagBriefResponse.from_dto(tag) for tag in tag_dtos]
 
 
-@curriculum_tag_router.delete(
+@taxonomy_router.delete(
     "/{curriculum_id}/tags",
     status_code=status.HTTP_204_NO_CONTENT,
 )
@@ -75,7 +73,7 @@ async def remove_tag_from_curriculum(
     )
 
 
-@curriculum_tag_router.post(
+@taxonomy_router.post(
     "/{curriculum_id}/category",
     response_model=CategoryBriefResponse,
     status_code=status.HTTP_201_CREATED,
@@ -101,7 +99,7 @@ async def assign_category_to_curriculum(
     return CategoryBriefResponse.from_dto(category_dto)
 
 
-@curriculum_tag_router.delete(
+@taxonomy_router.delete(
     "/{curriculum_id}/category",
     status_code=status.HTTP_204_NO_CONTENT,
 )
@@ -119,7 +117,7 @@ async def remove_category_from_curriculum(
     )
 
 
-@curriculum_tag_router.get(
+@taxonomy_router.get(
     "/{curriculum_id}/tags-and-category",
     response_model=CurriculumTagsResponse,
 )
@@ -143,7 +141,7 @@ async def get_curriculum_tags_and_category(
 # ========================= 검색 및 발견 엔드포인트 =========================
 
 
-@curriculum_tag_router.get(
+@taxonomy_router.get(
     "/search/by-tags",
     response_model=List[str],
 )
@@ -164,7 +162,7 @@ async def find_curriculums_by_tags(
     return curriculum_ids
 
 
-@curriculum_tag_router.get(
+@taxonomy_router.get(
     "/search/by-category/{category_id}",
     response_model=List[str],
 )
@@ -190,7 +188,7 @@ async def find_curriculums_by_category(
 # ========================= 사용자 활동 조회 엔드포인트 =========================
 
 
-@curriculum_tag_router.get(
+@taxonomy_router.get(
     "/tags/my-tagged-curriculums",
     response_model=List[str],
 )
@@ -212,7 +210,7 @@ async def get_my_tagged_curriculums(
     return curriculum_ids
 
 
-@curriculum_tag_router.get(
+@taxonomy_router.get(
     "/categories/my-categorized-curriculums",
     response_model=List[str],
 )

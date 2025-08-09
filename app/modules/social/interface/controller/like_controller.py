@@ -20,7 +20,7 @@ from app.modules.social.interface.schema.social_schema import (
 from app.modules.user.domain.vo.role import RoleVO
 
 
-like_router = APIRouter(prefix="/curriculums", tags=["Likes"])
+like_router = APIRouter(prefix="/curriculums", tags=["Social"])
 
 
 @like_router.post(

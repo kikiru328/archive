@@ -1,23 +1,15 @@
-# from contextlib import asynccontextmanager
-# from fastapi import FastAPI
-# from app.core.di_container import Container
-# import logging
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+import logging
 
-# logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
-# @asynccontextmanager
-# async def core_lifespan(app: FastAPI):
-#     logger.info("⚙️  Wire DI")
-#     app.container: Container()
-#     app.container.wire(
-#         packages=[
-#             "user.interface.controllers",
-#             "curriculum.interface.controllers",
-#             "admin.interface.controllers",
-#             "monitoring",
-#         ]
-#     )
-#     yield
-#     logger.info("⚙️  DI unwired (nothing to clean)")
+@asynccontextmanager
+async def core_lifespan(app: FastAPI):
+    logger.info("⚙️ Wire DI")
+    app.container.wire()  # type: ignore # app.container 사용
+    yield
+    logger.info("⚙️ DI unwired")
+    app.container.unwire()  # type: ignore # app.container 사용
+    yield

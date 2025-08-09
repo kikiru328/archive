@@ -64,12 +64,6 @@ class TagInUseError(Exception):
     pass
 
 
-class CurriculumNotFoundError(Exception):
-    """커리큘럼을 찾을 수 없음"""
-
-    pass
-
-
 class TagLimitExceededError(Exception):
     """태그 개수 제한 초과"""
 

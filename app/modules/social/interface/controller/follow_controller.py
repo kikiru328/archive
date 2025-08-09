@@ -8,7 +8,6 @@ from app.modules.social.application.exception import (
     AlreadyFollowingError,
     NotFollowingError,
     SelfFollowError,
-    UserNotFoundError,
 )
 from app.modules.social.application.service.follow_service import FollowService
 from app.modules.social.application.dto.follow_dto import FollowQuery
@@ -22,9 +21,10 @@ from app.modules.social.interface.schema.follow_schema import (
     FollowStatusResponse,
     FollowSuggestionsResponse,
 )
+from app.modules.user.application.exception import UserNotFoundError
 
 
-follow_router = APIRouter(prefix="/social", tags=["Social - Follow"])
+follow_router = APIRouter(prefix="/social", tags=["Social"])
 
 
 @follow_router.post(

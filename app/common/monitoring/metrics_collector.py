@@ -62,7 +62,7 @@ class MetricsService:
         self,
         session: AsyncSession,
         redis_client: RedisClient,
-        update_interval: int = 300,  # 30초마다 업데이트
+        update_interval: int = 45,  # 45초마다 업데이트
     ):
         self.session = session
         self.redis_client = redis_client

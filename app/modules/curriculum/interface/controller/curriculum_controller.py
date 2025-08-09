@@ -68,25 +68,6 @@ async def generate_curriculum(
     return CurriculumResponse.from_dto(generated)
 
 
-@curriculum_router.get("/me", response_model=CurriculumsPageResponse)
-@inject
-async def get_list_my_curriculums(
-    current_user: Annotated[CurrentUser, Depends(get_current_user)],
-    page: int = Query(1, ge=1),
-    items_per_page: int = Query(10, ge=1, le=100),
-    curriculum_service: CurriculumService = Depends(
-        Provide[Container.curriculum_service]
-    ),
-) -> CurriculumsPageResponse:
-    query = CurriculumQuery(
-        owner_id=current_user.id,
-        page=page,
-        items_per_page=items_per_page,
-    )
-    page_dto: CurriculumPageDTO = await curriculum_service.get_curriculums(query=query)
-    return CurriculumsPageResponse.from_dto(page_dto)
-
-
 @curriculum_router.get("/public", response_model=CurriculumsPageResponse)
 @inject
 async def get_list_public_curriculums(
@@ -321,3 +302,25 @@ async def delete_lesson(
     )
 
     await curriculum_service.delete_lesson(dto, RoleVO(current_user.role))
+
+
+user_curriculum_router = APIRouter(prefix="/curriculums", tags=["Users"])
+
+
+@user_curriculum_router.get("/me", response_model=CurriculumsPageResponse)
+@inject
+async def get_list_my_curriculums(
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    page: int = Query(1, ge=1),
+    items_per_page: int = Query(10, ge=1, le=100),
+    curriculum_service: CurriculumService = Depends(
+        Provide[Container.curriculum_service]
+    ),
+) -> CurriculumsPageResponse:
+    query = CurriculumQuery(
+        owner_id=current_user.id,
+        page=page,
+        items_per_page=items_per_page,
+    )
+    page_dto: CurriculumPageDTO = await curriculum_service.get_curriculums(query=query)
+    return CurriculumsPageResponse.from_dto(page_dto)

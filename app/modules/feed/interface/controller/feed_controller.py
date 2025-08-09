@@ -9,7 +9,7 @@ from app.modules.feed.application.dto.feed_dto import FeedQuery
 from app.modules.feed.interface.schema.feed_schema import FeedPageResponse
 
 
-feed_router = APIRouter(prefix="/feed", tags=["Feed"])
+feed_router = APIRouter(prefix="/feed", tags=["Social"])
 
 
 @feed_router.get("/public", response_model=FeedPageResponse)

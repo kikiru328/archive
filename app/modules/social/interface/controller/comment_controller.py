@@ -21,7 +21,7 @@ from app.modules.social.interface.schema.social_schema import (
 from app.modules.user.domain.vo.role import RoleVO
 
 
-comment_router = APIRouter(prefix="/curriculums", tags=["Comments"])
+comment_router = APIRouter(prefix="/curriculums", tags=["Social"])
 
 
 @comment_router.post(
