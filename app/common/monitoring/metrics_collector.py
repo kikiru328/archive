@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from sqlalchemy import func, select
@@ -11,16 +12,30 @@ from app.common.monitoring.metrics import (
     set_total_users,
     set_total_curriculums,
     set_public_curriculums,
+    set_private_curriculums,
     set_total_summaries,
     set_total_feedbacks,
     set_average_completion_rate,
     set_average_feedback_score,
     set_active_learners,
+    set_total_tags,
+    set_total_categories,
+    set_active_categories,
+    set_total_curriculum_tags,
+    set_total_curriculum_categories,
+    set_popular_tags,
+    set_average_tags_per_curriculum,
 )
 from app.modules.user.infrastructure.db_model.user import UserModel
 from app.modules.curriculum.infrastructure.db_model.curriculum import CurriculumModel
 from app.modules.learning.infrastructure.db_model.summary import SummaryModel
 from app.modules.learning.infrastructure.db_model.feedback import FeedbackModel
+from app.modules.taxonomy.infrastructure.db_model.tag import TagModel
+from app.modules.taxonomy.infrastructure.db_model.category import CategoryModel
+from app.modules.taxonomy.infrastructure.db_model.curriculum_tag import (
+    CurriculumTagModel,
+    CurriculumCategoryModel,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +110,9 @@ class MetricsService:
             public_curriculums = await self._get_public_curriculums()
             set_public_curriculums(public_curriculums)
 
+            private_curriculums = await self._get_private_curriculums()
+            set_private_curriculums(private_curriculums)
+
             # 학습 메트릭
             total_summaries = await self._get_total_summaries()
             set_total_summaries(total_summaries)
@@ -112,12 +130,36 @@ class MetricsService:
             active_learners = await self._get_active_learners()
             set_active_learners(active_learners)
 
+            # 태그/카테고리 메트릭
+            total_tags = await self._get_total_tags()
+            set_total_tags(total_tags)
+
+            total_categories = await self._get_total_categories()
+            set_total_categories(total_categories)
+
+            active_categories = await self._get_active_categories()
+            set_active_categories(active_categories)
+
+            total_curriculum_tags = await self._get_total_curriculum_tags()
+            set_total_curriculum_tags(total_curriculum_tags)
+
+            total_curriculum_categories = await self._get_total_curriculum_categories()
+            set_total_curriculum_categories(total_curriculum_categories)
+
+            popular_tags = await self._get_popular_tags()
+            set_popular_tags(popular_tags)
+
+            avg_tags_per_curriculum = await self._get_average_tags_per_curriculum()
+            set_average_tags_per_curriculum(avg_tags_per_curriculum)
+
             logger.debug(
                 f"Metrics updated - Users: {total_users} (active: {active_users}), "
-                + f"Curriculums: {total_curriculums} (public: {public_curriculums}, "
-                + f"Learning: {total_summaries} summaries, {total_feedbacks} feedbacks, "
-                + f"Avg completion: {avg_completion_rate:.1f}%, Avg score: {avg_feedback_score:.1f}, "
-                + f"Active learners: {active_learners}"
+                f"Curriculums: {total_curriculums} (public: {public_curriculums}, private: {private_curriculums}), "
+                f"Learning: {total_summaries} summaries, {total_feedbacks} feedbacks, "
+                f"Avg completion: {avg_completion_rate:.1f}%, Avg score: {avg_feedback_score:.1f}, "
+                f"Active learners: {active_learners}, "
+                f"Taxonomy: {total_tags} tags, {total_categories} categories ({active_categories} active), "
+                f"Connections: {total_curriculum_tags} tag-assignments, {total_curriculum_categories} category-assignments"
             )
 
         except Exception as e:
@@ -236,7 +278,7 @@ class MetricsService:
                 summary_count = row.summary_count or 0
 
                 # 해당 커리큘럼의 총 주차 수 조회
-                total_weeks_query = select(func.count()).select_from(  # noqa: F841
+                total_weeks_query = select(func.count()).select_from(
                     select(CurriculumModel)
                     .where(CurriculumModel.id == curriculum_id)
                     .subquery()
@@ -283,3 +325,73 @@ class MetricsService:
         except Exception as e:
             logger.error(f"Error calculating active learners: {e}")
             return 0
+
+    async def _get_total_tags(self) -> int:
+        """전체 태그 수 조회"""
+        query = select(func.count()).select_from(TagModel)
+        result = await self.session.execute(query)
+        return result.scalar_one()
+
+    async def _get_total_categories(self) -> int:
+        """전체 카테고리 수 조회"""
+        query = select(func.count()).select_from(CategoryModel)
+        result = await self.session.execute(query)
+        return result.scalar_one()
+
+    async def _get_active_categories(self) -> int:
+        """활성 카테고리 수 조회"""
+        query = (
+            select(func.count())
+            .select_from(CategoryModel)
+            .where(CategoryModel.is_active == True)
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one()
+
+    async def _get_total_curriculum_tags(self) -> int:
+        """전체 커리큘럼-태그 연결 수 조회"""
+        query = select(func.count()).select_from(CurriculumTagModel)
+        result = await self.session.execute(query)
+        return result.scalar_one()
+
+    async def _get_total_curriculum_categories(self) -> int:
+        """전체 커리큘럼-카테고리 연결 수 조회"""
+        query = select(func.count()).select_from(CurriculumCategoryModel)
+        result = await self.session.execute(query)
+        return result.scalar_one()
+
+    async def _get_popular_tags(self) -> int:
+        """인기 태그 수 조회 (usage_count >= 10)"""
+        try:
+            query = (
+                select(func.count())
+                .select_from(TagModel)
+                .where(TagModel.usage_count >= 10)
+            )
+            result = await self.session.execute(query)
+            return result.scalar_one()
+        except Exception as e:
+            logger.error(f"Error calculating popular tags: {e}")
+            return 0
+
+    async def _get_average_tags_per_curriculum(self) -> float:
+        """커리큘럼당 평균 태그 수 조회"""
+        try:
+            # 커리큘럼별 태그 수 계산
+            query = (
+                select(func.count(CurriculumTagModel.tag_id).label("tag_count"))
+                .select_from(CurriculumModel.outerjoin(CurriculumTagModel))
+                .group_by(CurriculumModel.id)
+            )
+
+            result = await self.session.execute(query)
+            tag_counts = [row.tag_count for row in result.fetchall()]
+
+            if not tag_counts:
+                return 0.0
+
+            return sum(tag_counts) / len(tag_counts)
+
+        except Exception as e:
+            logger.error(f"Error calculating average tags per curriculum: {e}")
+            return 0.0

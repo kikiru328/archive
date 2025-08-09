@@ -27,7 +27,252 @@
             "expr": "total_summaries",
             "refId": "A",
             "legendFormat": "Total Summaries"
+          {
+        "id": 13,
+        "title": "Taxonomy Metrics Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "total_tags",
+            "refId": "A",
+            "legendFormat": "Total Tags"
           },
+          {
+            "expr": "total_categories",
+            "refId": "B",
+            "legendFormat": "Total Categories"
+          },
+          {
+            "expr": "active_categories",
+            "refId": "C",
+            "legendFormat": "Active Categories"
+          },
+          {
+            "expr": "popular_tags",
+            "refId": "D",
+            "legendFormat": "Popular Tags"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 52
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 14,
+        "title": "Curriculum Connections",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "total_curriculum_tags",
+            "refId": "A",
+            "legendFormat": "Tag Connections"
+          },
+          {
+            "expr": "total_curriculum_categories",
+            "refId": "B",
+            "legendFormat": "Category Connections"
+          },
+          {
+            "expr": "average_tags_per_curriculum",
+            "refId": "C",
+            "legendFormat": "Avg Tags/Curriculum"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 12,
+          "y": 52
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 3
+                },
+                {
+                  "color": "red",
+                  "value": 8
+                }
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 15,
+        "title": "Taxonomy Usage Over Time",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "total_tags",
+            "refId": "A",
+            "legendFormat": "Total Tags"
+          },
+          {
+            "expr": "total_categories",
+            "refId": "B",
+            "legendFormat": "Total Categories"
+          },
+          {
+            "expr": "total_curriculum_tags",
+            "refId": "C",
+            "legendFormat": "Tag Connections"
+          },
+          {
+            "expr": "total_curriculum_categories",
+            "refId": "D",
+            "legendFormat": "Category Connections"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 58
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 16,
+        "title": "Taxonomy Creation Rates",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(tag_creations_total[1m])",
+            "refId": "A",
+            "legendFormat": "Tag Creations/sec"
+          },
+          {
+            "expr": "rate(curriculum_tag_assignments_total[1m])",
+            "refId": "B",
+            "legendFormat": "Tag Assignments/sec"
+          },
+          {
+            "expr": "rate(curriculum_category_assignments_total[1m])",
+            "refId": "C",
+            "legendFormat": "Category Assignments/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 66
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 17,
+        "title": "Category Status Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "active_categories",
+            "refId": "A",
+            "legendFormat": "Active"
+          },
+          {
+            "expr": "total_categories - active_categories",
+            "refId": "B",
+            "legendFormat": "Inactive"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 74
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 18,
+        "title": "Tag Popularity Distribution",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "popular_tags",
+            "refId": "A",
+            "legendFormat": "Popular Tags (≥10 uses)"
+          },
+          {
+            "expr": "total_tags - popular_tags",
+            "refId": "B",
+            "legendFormat": "Regular Tags (<10 uses)"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 74
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "blue",
+                  "value": null
+                },
+                {
+                  "color": "green",
+                  "value": 10
+                }
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
           {
             "expr": "total_feedbacks",
             "refId": "B",

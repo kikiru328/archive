@@ -28,6 +28,10 @@ from app.modules.curriculum.domain.repository.curriculum_repo import (
     ICurriculumRepository,
 )
 from app.modules.user.domain.vo.role import RoleVO
+from app.common.monitoring.metrics import (
+    increment_curriculum_tag_assignment,
+    increment_curriculum_category_assignment,
+)
 
 
 class CurriculumTagService:
@@ -82,7 +86,8 @@ class CurriculumTagService:
             tag_names=command.tag_names,
             user_id=command.user_id,
         )
-
+        for _ in added_tags:
+            increment_curriculum_tag_assignment()
         return [TagDTO.from_domain(tag) for tag in added_tags]
 
     async def remove_tag_from_curriculum(
@@ -150,7 +155,7 @@ class CurriculumTagService:
                 user_id=command.user_id,
             )
         )
-
+        increment_curriculum_category_assignment()
         return CategoryDTO.from_domain(category)
 
     async def remove_category_from_curriculum(

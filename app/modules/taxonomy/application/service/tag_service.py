@@ -23,6 +23,7 @@ from app.modules.taxonomy.domain.repository.tag_repo import ITagRepository
 from app.modules.taxonomy.domain.service.tag_domain_service import TagDomainService
 from app.modules.taxonomy.domain.vo.tag_name import TagName
 from app.modules.user.domain.vo.role import RoleVO
+from app.common.monitoring.metrics import increment_tag_creation
 
 
 class TagService:
@@ -54,6 +55,7 @@ class TagService:
             )
 
             await self.tag_repo.save(tag)
+            increment_tag_creation()
             return TagDTO.from_domain(tag)
 
         except ValueError as e:

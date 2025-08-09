@@ -50,8 +50,38 @@ average_feedback_score_gauge = Gauge(
     "average_feedback_score", "Average feedback score across all users"
 )
 
-active_learners_gauge = Gauge(
-    "active_learners", "Number of users who created summaries in the last 7 days"
+# 태그/카테고리 메트릭
+tag_creations_total = Counter("tag_creations_total", "Total number of tag creations")
+
+total_tags_gauge = Gauge("total_tags", "Total number of tags in the system")
+
+total_categories_gauge = Gauge(
+    "total_categories", "Total number of categories in the system"
+)
+
+active_categories_gauge = Gauge("active_categories", "Number of active categories")
+
+curriculum_tag_assignments_total = Counter(
+    "curriculum_tag_assignments_total", "Total number of curriculum-tag assignments"
+)
+
+curriculum_category_assignments_total = Counter(
+    "curriculum_category_assignments_total",
+    "Total number of curriculum-category assignments",
+)
+
+total_curriculum_tags_gauge = Gauge(
+    "total_curriculum_tags", "Total number of curriculum-tag connections"
+)
+
+total_curriculum_categories_gauge = Gauge(
+    "total_curriculum_categories", "Total number of curriculum-category connections"
+)
+
+popular_tags_gauge = Gauge("popular_tags", "Number of popular tags (usage_count >= 10)")
+
+average_tags_per_curriculum_gauge = Gauge(
+    "average_tags_per_curriculum", "Average number of tags per curriculum"
 )
 
 # 메트릭 서버 상태
@@ -149,6 +179,51 @@ def set_average_feedback_score(score: float) -> None:
     average_feedback_score_gauge.set(score)
 
 
-def set_active_learners(count: int) -> None:
-    """활성 학습자 수 설정"""
-    active_learners_gauge.set(count)
+def increment_tag_creation() -> None:
+    """태그 생성 수 증가"""
+    tag_creations_total.inc()
+
+
+def set_total_tags(count: int) -> None:
+    """전체 태그 수 설정"""
+    total_tags_gauge.set(count)
+
+
+def set_total_categories(count: int) -> None:
+    """전체 카테고리 수 설정"""
+    total_categories_gauge.set(count)
+
+
+def set_active_categories(count: int) -> None:
+    """활성 카테고리 수 설정"""
+    active_categories_gauge.set(count)
+
+
+def increment_curriculum_tag_assignment() -> None:
+    """커리큘럼-태그 연결 수 증가"""
+    curriculum_tag_assignments_total.inc()
+
+
+def increment_curriculum_category_assignment() -> None:
+    """커리큘럼-카테고리 연결 수 증가"""
+    curriculum_category_assignments_total.inc()
+
+
+def set_total_curriculum_tags(count: int) -> None:
+    """전체 커리큘럼-태그 연결 수 설정"""
+    total_curriculum_tags_gauge.set(count)
+
+
+def set_total_curriculum_categories(count: int) -> None:
+    """전체 커리큘럼-카테고리 연결 수 설정"""
+    total_curriculum_categories_gauge.set(count)
+
+
+def set_popular_tags(count: int) -> None:
+    """인기 태그 수 설정"""
+    popular_tags_gauge.set(count)
+
+
+def set_average_tags_per_curriculum(avg: float) -> None:
+    """커리큘럼당 평균 태그 수 설정"""
+    average_tags_per_curriculum_gauge.set(avg)
