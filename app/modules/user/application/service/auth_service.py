@@ -5,7 +5,7 @@ from ulid import ULID  # type: ignore
 from app.core.auth import Role, create_access_token
 from app.utils.crypto import Crypto
 
-# from app.common.monitoring.metrics import increment_user_registration
+from app.common.monitoring.metrics import increment_user_registration
 from app.modules.user.application.exception import (
     EmailNotFoundError,
     ExistEmailError,
@@ -68,7 +68,7 @@ class AuthService:
         )
 
         await self.user_repo.save(user)
-        # increment_user_registration()
+        increment_user_registration()
 
         return UserDTO.from_domain(user)
 

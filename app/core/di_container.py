@@ -1,9 +1,11 @@
 from dependency_injector import containers, providers
 
 # from dependency_injector.wiring import Provide
+from app.common.cache import redis_client
 from app.common.db.session import get_session
 
 from app.common.llm.openai_client import OpenAILLMClient
+from app.common.monitoring.metrics_collector import MetricsService
 from app.modules.admin.application.service.admin_curriculum_service import (
     AdminCurriculumService,
 )
@@ -258,4 +260,11 @@ class Container(containers.DeclarativeContainer):
     )
     admin_curriculum_service = providers.Factory(
         AdminCurriculumService, repo=admin_curriculum_repository
+    )
+
+    metrics_service = providers.Factory(
+        MetricsService,
+        session=db_session,
+        redis_client=providers.Singleton(lambda: redis_client),
+        update_interval=30,
     )
