@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional
 import os
 from langfuse.langchain import CallbackHandler
 
@@ -100,7 +100,7 @@ class LangfuseManager:
 
             client = Langfuse()
 
-            trace = client.trace(name="connection_test")
+            trace = client.trace(name="connection_test")  # type: ignore
             trace.event(name="test_event", metadata={"test": True})
             client.flush()
 
