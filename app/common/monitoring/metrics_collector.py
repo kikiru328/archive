@@ -3,8 +3,8 @@ from datetime import datetime, timedelta, timezone
 import logging
 from typing import Optional
 
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import Engine, QueuePool, func, select
+from sqlalchemy.ext.asyncio import AsyncSession, AsyncConnection, AsyncEngine
 
 from app.common.cache.redis_client import RedisClient
 from app.common.monitoring.metrics import (
@@ -616,14 +616,46 @@ class MetricsService:
     async def _update_db_connection_metrics(self) -> None:
         """DB 연결 풀 메트릭 업데이트"""
         try:
-            # SQLAlchemy 연결 풀 정보 가져오기
-            pool = self.session.get_bind().pool
+            bind = self.session.get_bind()
 
-            pool_size = pool.size()
-            checked_out = pool.checkedout()
-            overflow = pool.overflow()
+            # 1) bind → sync_engine (초기값 보장)
+            sync_engine: Optional[Engine] = None
+            if isinstance(bind, AsyncConnection):
+                sync_engine = bind.sync_engine
+            elif isinstance(bind, AsyncEngine):
+                sync_engine = bind.sync_engine
+
+            if sync_engine is None:
+                logger.debug("No sync_engine from bind: %s", type(bind).__name__)
+                return
+
+            # 2) 풀 조회
+            pool = sync_engine.pool
+
+            # 3) QueuePool일 때만 상세 지표
+            pool_size = checked_out = overflow = 0
+            if isinstance(pool, QueuePool):
+                pool_size = int(pool.size())
+                checked_out = int(pool.checkedout())
+                overflow = int(pool.overflow())
+            else:
+                # NullPool 등은 수치 0 보고, 상태만 로그
+                status = pool.status() if hasattr(pool, "status") else "<no status>"
+                logger.debug(
+                    "Non-QueuePool detected: %s | %s", type(pool).__name__, status
+                )
 
             set_db_connection_metrics(pool_size, checked_out, overflow)
+
+            # SQLAlchemy 연결 풀 정보 가져오기
+
+            # pool = self.session.get_bind().pool
+
+            # pool_size = pool.size()
+            # checked_out = pool.checkedout()
+            # overflow = pool.overflow()
+
+            # set_db_connection_metrics(pool_size, checked_out, overflow)
 
         except Exception as e:
             logger.error(f"Error updating DB connection metrics: {e}")
