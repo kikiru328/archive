@@ -45,7 +45,7 @@ class LangChainLLMClient(ILLMClientRepository):
             model=self.model,
             api_key=self.api_key,
             temperature=0.3,
-            max_tokens=1200,  # model_kwargs 대신 직접 설정
+            max_tokens=1200,  # model_kwargs 대신 직접 설정 # type: ignore
             callbacks=callbacks,
         )
 

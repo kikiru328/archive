@@ -1,22 +1,23 @@
 CURRICULUM_GENERATION_PROMPT = """
 목표: {goal}
-기간(주): {period}
+기간(주): {period}  
 난이도: {difficulty}
 세부요청: {details}
+
+**중요**: 반드시 주어진 목표({goal})에 맞는 커리큘럼을 생성하세요. 
+목표가 애매하더라도 프로그래밍이 아닌 다른 주제일 수 있습니다.
+
 **제약 조건:**
-- `lessons` 항목은 각 주차별 최소 1개, 최대 5개의 문자열 리스트여야 합니다.
-- 실용적이고 구체적인 내용으로 구성하시오
+- 주어진 목표에 정확히 맞는 내용으로 구성
+- 각 주차별 최소 1개, 최대 5개 레슨
+- 실용적이고 구체적인 내용
 
-IMPORTANT: 반드시 유효한 JSON만 응답하세요. 다른 텍스트는 포함하지 마세요.
-Output raw JSON only, without any markdown or fences.
-
-다음 JSON 형식으로 커리큘럼을 생성해주세요:
+다음 JSON 형식으로 응답:
 {{
-  "title": "<커리큘럼 제목>",
+  "title": "<목표에 맞는 커리큘럼 제목>",
   "schedule": [
-    {{ "week_number": 1, "lessons": ["Intro","Setup"] }},
-    …,
-    {{ "week_number": {period}, "lessons": ["…","…"] }}
+    {{ "week_number": 1, "lessons": ["레슨1","레슨2"] }},
+    {{ "week_number": {period}, "lessons": ["레슨1","레슨2"] }}
   ]
 }}
 """
