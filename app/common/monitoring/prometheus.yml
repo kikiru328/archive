@@ -11,14 +11,16 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
+  # 애플리케이션 메트릭만 수집 (HTTP 요청, 응답시간 등)
   - job_name: 'fastapi-app'
     static_configs:
-      - targets: ['app:8000']  # FastAPI 애플리케이션 메트릭 엔드포인트
-    scrape_interval: 5s
+      - targets: ['app:8000']
+    scrape_interval: 30s
     metrics_path: /metrics
     
-  - job_name: 'fastapi-metrics-server'
+  # 비즈니스 메트릭 수집 (사용자 수, 커리큘럼 수 등)
+  - job_name: 'fastapi-business-metrics'
     static_configs:
-      - targets: ['app:8001']  # Prometheus 클라이언트 서버
-    scrape_interval: 5s
+      - targets: ['app:8001']
+    scrape_interval: 60s  # 비즈니스 메트릭은 자주 변하지 않음
     metrics_path: /

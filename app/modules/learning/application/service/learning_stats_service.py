@@ -1,5 +1,5 @@
 from datetime import datetime, timezone, timedelta
-from typing import List
+from typing import List, Optional
 
 from app.modules.learning.application.dto.learning_stats_dto import (
     UserLearningStatsQuery,
@@ -121,6 +121,16 @@ class LearningStatsService:
             generated_at=end_date,
         )
 
+    def _safe_datetime_key(self, dt: Optional[datetime]) -> datetime:
+        """timezone-safe datetime key 생성"""
+        if dt is None:
+            return datetime(1900, 1, 1, tzinfo=timezone.utc)
+
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+
+        return dt
+
     async def _calculate_curriculum_progress(
         self, curriculums, user_id: str
     ) -> List[CurriculumProgressDTO]:
@@ -168,8 +178,7 @@ class LearningStatsService:
 
         # 최근 활동 순으로 정렬
         progress_list.sort(
-            key=lambda x: x.latest_activity
-            or datetime.min.replace(tzinfo=timezone.utc),
+            key=lambda x: self._safe_datetime_key(x.latest_activity),
             reverse=True,
         )
 
