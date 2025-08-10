@@ -38,7 +38,7 @@ import {
   AddIcon, 
   EditIcon, 
   DeleteIcon,
-  ViewIcon,
+  // ViewIcon,
   StarIcon
 } from '@chakra-ui/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -126,10 +126,6 @@ const Summary: React.FC = () => {
         // 요약 목록 보기 모드
         setCurrentView('list');
         await fetchSummariesByCurriculumAndWeek(curriculumId, parseInt(weekNumber));
-      } else {
-        // 요약 작성 모드
-        setCurrentView('create');
-        onCreateModalOpen();
       }
     }
   };
@@ -368,6 +364,17 @@ const Summary: React.FC = () => {
     return [] as WeekSchedule[];
   };
 
+  const getWeekTitle = (curriculumId: string, weekNumber: number) => {
+    const curriculum = curriculums.find(c => c.id === curriculumId);
+    if (!curriculum || !curriculum.week_schedules) {
+      return `${weekNumber}주차`;
+    }
+    
+    const week = curriculum.week_schedules.find(w => w.week_number === weekNumber);
+    return week?.title ? `${weekNumber}주차: ${week.title}` : `${weekNumber}주차`;
+  };
+
+
   const getSelectedWeekLessons = () => {
     try {
       const weeks = getSelectedCurriculumWeeks();
@@ -491,12 +498,14 @@ const Summary: React.FC = () => {
                 variant="outline" 
                 bg={cardBg} 
                 borderColor={borderColor}
+                cursor="pointer"
                 transition="all 0.2s"
                 _hover={{ 
                   transform: "translateY(-2px)", 
                   shadow: "lg",
                   borderColor: "blue.300"
                 }}
+                onClick={() => navigate(`/summary/${summary.id}`)}
               >
                 <CardBody>
                   <VStack align="stretch" spacing={3}>
@@ -506,7 +515,7 @@ const Summary: React.FC = () => {
                         {getCurriculumTitle(summary.curriculum_id)}
                       </Text>
                       <Heading size="sm" color={textColor} noOfLines={1}>
-                        {summary.week_number}주차
+                        {getWeekTitle(summary.curriculum_id, summary.week_number)}
                       </Heading>
                       <Badge colorScheme="blue" variant="subtle" size="sm">
                         {summary.week_number}주차
@@ -532,19 +541,14 @@ const Summary: React.FC = () => {
                     {/* 액션 버튼 */}
                     <HStack spacing={2} justify="flex-end">
                       <Button
-                        leftIcon={<ViewIcon />}
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => navigate(`/summary/${summary.id}`)}
-                      >
-                        보기
-                      </Button>
-                      <Button
                         leftIcon={<EditIcon />}
                         size="sm"
                         variant="ghost"
                         colorScheme="blue"
-                        onClick={() => handleEditSummary(summary)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // 카드 클릭 이벤트 방지
+                          handleEditSummary(summary);
+                        }}
                       >
                         수정
                       </Button>
@@ -553,7 +557,10 @@ const Summary: React.FC = () => {
                         size="sm"
                         variant="ghost"
                         colorScheme="red"
-                        onClick={() => handleDeleteSummary(summary.id)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // 카드 클릭 이벤트 방지
+                          handleDeleteSummary(summary.id);
+                        }}
                       >
                         삭제
                       </Button>
