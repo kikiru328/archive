@@ -57,8 +57,8 @@ interface Summary {
 
 interface WeekSchedule {
   week_number: number;
-  title: string; 
-  lessons: string[];
+  title?: string; 
+  lessons?: string[];
 }
 
 interface Curriculum {
@@ -223,13 +223,36 @@ const Summary: React.FC = () => {
     }
   };
 
-  const handleEditSummary = (summary: Summary) => {
+  const handleEditSummary = async (summary: Summary) => {
     setEditingSummary(summary);
+    
+    // 먼저 커리큘럼 상세 정보 로드
+    try {
+      const curriculum = curriculums.find(c => c.id === summary.curriculum_id);
+      if (!curriculum || !curriculum.week_schedules) {
+        console.log('커리큘럼 상세 정보 로드 중...');
+        const response = await curriculumAPI.getById(summary.curriculum_id);
+        const detailedCurriculum = response.data;
+        
+        // curriculums 업데이트
+        setCurriculums(prev => 
+          prev.map(c => 
+            c.id === summary.curriculum_id 
+              ? { ...c, week_schedules: detailedCurriculum.week_schedules }
+              : c
+          )
+        );
+      }
+    } catch (error) {
+      console.error('커리큘럼 상세 정보 로드 실패:', error);
+    }
+    
     setSummaryForm({
       curriculum_id: summary.curriculum_id,
       week_number: summary.week_number,
       content: summary.content
     });
+    
     onEditModalOpen();
   };
 
@@ -309,21 +332,31 @@ const Summary: React.FC = () => {
 
   // 선택된 커리큘럼의 주차 목록 생성 (week_schedules가 없어도 total_weeks 기반으로 생성)
   const getSelectedCurriculumWeeks = () => {
-    if (!summaryForm.curriculum_id) return [];
+    console.log('=== getSelectedCurriculumWeeks 호출됨 ===');
+    console.log('summaryForm.curriculum_id:', summaryForm.curriculum_id);
+    
+    if (!summaryForm.curriculum_id) {
+      console.log('curriculum_id가 없음');
+      return [];
+    }
     
     const curriculum = curriculums.find(c => c.id === summaryForm.curriculum_id);
-    if (!curriculum) return [];
+    console.log('찾은 커리큘럼:', curriculum);
+    
+    if (!curriculum) {
+      console.log('커리큘럼을 찾지 못함');
+      return [];
+    }
 
-    // 디버깅 로그 추가
-    console.log('선택된 커리큘럼:', curriculum);
-    console.log('week_schedules 존재 여부:', !!curriculum.week_schedules);
-    console.log('week_schedules 길이:', curriculum.week_schedules?.length);
+    console.log('week_schedules:', curriculum.week_schedules);
+    console.log('total_weeks:', curriculum.total_weeks);
 
-    if (curriculum.week_schedules && curriculum.week_schedules.length > 0) {
-      console.log('실제 week_schedules 사용:', curriculum.week_schedules);
+    // 안전장치 추가
+    if (curriculum.week_schedules && Array.isArray(curriculum.week_schedules) && curriculum.week_schedules.length > 0) {
+      console.log('실제 week_schedules 사용');
       return curriculum.week_schedules;
-    } else if (curriculum.total_weeks) {
-      console.log('임시 데이터 생성 - total_weeks:', curriculum.total_weeks);
+    } else if (curriculum.total_weeks && curriculum.total_weeks > 0) {
+      console.log('임시 데이터 생성');
       return Array.from({ length: curriculum.total_weeks }, (_, index) => ({
         week_number: index + 1,
         title: `${index + 1}주차 학습`,
@@ -331,13 +364,38 @@ const Summary: React.FC = () => {
       }));
     }
     
-    return [];
+    console.log('빈 배열 반환');
+    return [] as WeekSchedule[];
   };
 
   const getSelectedWeekLessons = () => {
-    const weeks = getSelectedCurriculumWeeks();
-    const week = weeks.find(w => w.week_number === summaryForm.week_number);
-    return week?.lessons || [];
+    try {
+      const weeks = getSelectedCurriculumWeeks();
+      console.log('getSelectedWeekLessons - weeks:', weeks);
+      
+      if (!weeks || !Array.isArray(weeks) || weeks.length === 0) {
+        console.log('weeks가 유효하지 않음:', weeks);
+        return [];
+      }
+      
+      const week = weeks.find(w => w && w.week_number === summaryForm.week_number);
+      console.log('getSelectedWeekLessons - 찾은 week:', week);
+      
+      if (!week) {
+        console.log('주차를 찾을 수 없음');
+        return [];
+      }
+      
+      if (!week.lessons || !Array.isArray(week.lessons)) {
+        console.log('lessons가 유효하지 않음:', week.lessons);
+        return [];
+      }
+      
+      return Array.isArray(week.lessons) ? week.lessons : [];
+    } catch (error) {
+      console.error('getSelectedWeekLessons 에러:', error);
+      return []; // 항상 배열 반환 보장
+    }
   };
 
   if (loading) {
@@ -403,7 +461,7 @@ const Summary: React.FC = () => {
         )}
 
         {/* 요약 목록 */}
-        {summaries.length === 0 ? (
+        {(summaries?.length ?? 0) === 0 ? (
           <Card bg={cardBg} borderColor={borderColor}>
             <CardBody>
               <VStack spacing={4} py={8}>
@@ -548,9 +606,10 @@ const Summary: React.FC = () => {
                       color={textColor}
                       borderColor={borderColor}
                     >
-                      {getSelectedCurriculumWeeks().map((week) => (
+                      {(getSelectedCurriculumWeeks() ?? []).map((week) => (
                         <option key={week.week_number} value={week.week_number}>
-                          {week.week_number}주차: {week.title} ({week.lessons.length}개 레슨)
+                          {week.week_number}주차: {week.title ?? `${week.week_number}주차`}
+                          ({Array.isArray(week.lessons) ? week.lessons.length : 0}개 레슨)
                         </option>
                       ))}
                     </Select>
@@ -564,11 +623,11 @@ const Summary: React.FC = () => {
                       {summaryForm.week_number}주차 학습 내용:
                     </Text>
                     <VStack align="start" spacing={1}>
-                      {getSelectedWeekLessons().map((lesson, index) => (
+                      {(getSelectedWeekLessons() ?? []).map((lesson, index) => (
                         <Text key={index} fontSize="sm" color="blue.600">
                           • {lesson}
                         </Text>
-                      ))}
+                      )) || null}
                     </VStack>
                   </Box>
                 )}
@@ -585,7 +644,7 @@ const Summary: React.FC = () => {
                     minLength={100}
                   />
                   <Text fontSize="xs" color={secondaryTextColor} mt={1}>
-                    {summaryForm.content.length}/5000자 (최소 100자 필요)
+                    {(summaryForm.content?.length ?? 0)}/5000자 (최소 100자 필요)
                   </Text>
                 </FormControl>
               </VStack>
@@ -599,7 +658,7 @@ const Summary: React.FC = () => {
                 onClick={handleCreateSummary}
                 isLoading={submitting}
                 loadingText="저장 중..."
-                isDisabled={summaryForm.content.length < 100}
+                isDisabled={(summaryForm.content?.length ?? 0) < 100}
               >
                 저장하기
               </Button>
@@ -632,7 +691,7 @@ const Summary: React.FC = () => {
                     minLength={100}
                   />
                   <Text fontSize="xs" color={secondaryTextColor} mt={1}>
-                    {summaryForm.content.length}/5000자 (최소 100자 필요)
+                    {(summaryForm.content?.length ?? 0)}/5000자 (최소 100자 필요)
                   </Text>
                 </FormControl>
               </VStack>
@@ -646,7 +705,7 @@ const Summary: React.FC = () => {
                 onClick={handleUpdateSummary}
                 isLoading={submitting}
                 loadingText="수정 중..."
-                isDisabled={summaryForm.content.length < 100}
+                isDisabled={(summaryForm.content?.length ?? 0) < 100}
               >
                 수정하기
               </Button>
