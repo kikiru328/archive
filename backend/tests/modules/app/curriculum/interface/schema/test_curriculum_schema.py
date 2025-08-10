@@ -451,8 +451,10 @@ class TestCurriculumResponse:
         """DTO에서 응답 모델로 변환 테스트"""
         # Given
         week_schedules = [
-            WeekScheduleDTO(week_number=1, lessons=["기초 개념", "환경 설정"]),
-            WeekScheduleDTO(week_number=2, lessons=["심화 학습", "실습"]),
+            WeekScheduleDTO(
+                week_number=1, title="개념", lessons=["기초 개념", "환경 설정"]
+            ),
+            WeekScheduleDTO(week_number=2, title="개념", lessons=["심화 학습", "실습"]),
         ]
 
         dto = CurriculumDTO(

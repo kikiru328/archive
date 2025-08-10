@@ -21,6 +21,7 @@ class TestCurriculum:
         week_schedules = [
             WeekSchedule(
                 week_number=WeekNumber(1),
+                title=Title("개념"),
                 lessons=Lessons(["Python 설치", "변수와 자료형"]),
             )
         ]
@@ -98,7 +99,9 @@ class TestCurriculum:
         # Given
         curriculum = self._create_valid_curriculum()
         new_week_schedule = WeekSchedule(
-            week_number=WeekNumber(2), lessons=Lessons(["함수 기초", "함수 심화"])
+            week_number=WeekNumber(2),
+            title=Title("개념"),
+            lessons=Lessons(["함수 기초", "함수 심화"]),
         )
 
         # When
@@ -114,6 +117,7 @@ class TestCurriculum:
         curriculum = self._create_valid_curriculum()
         duplicate_week_schedule = WeekSchedule(
             week_number=WeekNumber(1),  # 이미 존재하는 주차
+            title=Title("개념"),
             lessons=Lessons(["중복 레슨"]),
         )
 
@@ -130,7 +134,9 @@ class TestCurriculum:
         for i in range(2, 25):
             curriculum.add_week_schedule(
                 WeekSchedule(
-                    week_number=WeekNumber(i), lessons=Lessons([f"Week {i} lesson"])
+                    week_number=WeekNumber(i),
+                    title=Title("개념"),
+                    lessons=Lessons([f"Week {i} lesson"]),
                 )
             )
 
@@ -140,7 +146,9 @@ class TestCurriculum:
         ):
             curriculum.add_week_schedule(
                 WeekSchedule(
-                    week_number=WeekNumber(25), lessons=Lessons(["Over limit lesson"])
+                    week_number=WeekNumber(25),
+                    title=Title("개념"),
+                    lessons=Lessons(["Over limit lesson"]),
                 )
             )
 
@@ -149,7 +157,11 @@ class TestCurriculum:
         # Given
         curriculum = self._create_valid_curriculum()
         curriculum.add_week_schedule(
-            WeekSchedule(week_number=WeekNumber(2), lessons=Lessons(["Week 2 lesson"]))
+            WeekSchedule(
+                week_number=WeekNumber(2),
+                title=Title("개념"),
+                lessons=Lessons(["Week 2 lesson"]),
+            )
         )
 
         # When
@@ -197,6 +209,7 @@ class TestCurriculum:
         curriculum = self._create_valid_curriculum()
         updated_week_schedule = WeekSchedule(
             week_number=WeekNumber(1),
+            title=Title("개념"),
             lessons=Lessons(["업데이트된 레슨 1", "업데이트된 레슨 2"]),
         )
 
@@ -215,6 +228,7 @@ class TestCurriculum:
         curriculum = self._create_valid_curriculum()
         mismatched_week_schedule = WeekSchedule(
             week_number=WeekNumber(2),  # 업데이트 대상과 다른 주차
+            title=Title("개념"),
             lessons=Lessons(["잘못된 레슨"]),
         )
 
@@ -305,7 +319,11 @@ class TestCurriculum:
         # Given
         curriculum = self._create_valid_curriculum()
         curriculum.add_week_schedule(
-            WeekSchedule(week_number=WeekNumber(2), lessons=Lessons(["Week 2 lesson"]))
+            WeekSchedule(
+                week_number=WeekNumber(2),
+                title=Title("개념"),
+                lessons=Lessons(["Week 2 lesson"]),
+            )
         )
 
         # When
@@ -321,6 +339,7 @@ class TestCurriculum:
         curriculum.add_week_schedule(
             WeekSchedule(
                 week_number=WeekNumber(2),
+                title=Title("개념"),
                 lessons=Lessons(["Lesson 1", "Lesson 2", "Lesson 3"]),
             )
         )
@@ -365,10 +384,18 @@ class TestCurriculum:
 
         # 역순으로 추가
         curriculum.add_week_schedule(
-            WeekSchedule(week_number=WeekNumber(3), lessons=Lessons(["Week 3 lesson"]))
+            WeekSchedule(
+                week_number=WeekNumber(3),
+                title=Title("개념"),
+                lessons=Lessons(["Week 3 lesson"]),
+            )
         )
         curriculum.add_week_schedule(
-            WeekSchedule(week_number=WeekNumber(2), lessons=Lessons(["Week 2 lesson"]))
+            WeekSchedule(
+                week_number=WeekNumber(2),
+                title=Title("개념"),
+                lessons=Lessons(["Week 2 lesson"]),
+            )
         )
 
         # When
@@ -389,7 +416,9 @@ class TestCurriculum:
             updated_at=now,
             week_schedules=[
                 WeekSchedule(
-                    week_number=WeekNumber(1), lessons=Lessons(["Lesson 1", "Lesson 2"])
+                    week_number=WeekNumber(1),
+                    title=Title("개념"),
+                    lessons=Lessons(["Lesson 1", "Lesson 2"]),
                 )
             ],
         )

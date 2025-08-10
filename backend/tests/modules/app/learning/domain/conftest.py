@@ -74,6 +74,7 @@ def sample_curriculum():
     curriculum.week_schedules = [
         WeekSchedule(
             week_number=WeekNumber(1),
+            title=Title("개념"),
             lessons=Lessons(["변수와 자료형", "연산자", "조건문"]),
         )
     ]

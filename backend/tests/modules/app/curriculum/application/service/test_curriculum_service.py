@@ -78,10 +78,12 @@ class TestCurriculumService:
         week_schedules: list[WeekSchedule] = [
             WeekSchedule(
                 week_number=WeekNumber(1),
+                title=Title("개념"),
                 lessons=Lessons(["기초 개념", "환경 설정"]),
             ),
             WeekSchedule(
                 week_number=WeekNumber(2),
+                title=Title("개념"),
                 lessons=Lessons(["심화 학습", "실습"]),
             ),
         ]
@@ -597,10 +599,12 @@ class TestCurriculumWeekManagement:
         week_schedules = [
             WeekSchedule(
                 week_number=WeekNumber(1),
+                title=Title("개념"),
                 lessons=Lessons(["기초 개념", "환경 설정"]),
             ),
             WeekSchedule(
                 week_number=WeekNumber(2),
+                title=Title("개념"),
                 lessons=Lessons(["심화 학습", "실습"]),
             ),
         ]
@@ -771,6 +775,7 @@ class TestCurriculumLessonManagement:
         week_schedules = [
             WeekSchedule(
                 week_number=WeekNumber(1),
+                title=Title("개념"),
                 lessons=Lessons(["기초 개념", "환경 설정", "첫 번째 실습"]),
             ),
         ]
@@ -808,6 +813,7 @@ class TestCurriculumLessonManagement:
         # 레슨이 추가된 새로운 WeekSchedule 생성
         updated_week_schedule = WeekSchedule(
             week_number=WeekNumber(1),
+            title=Title("개념"),
             lessons=Lessons(["기초 개념", "새로운 레슨", "환경 설정", "첫 번째 실습"]),
         )
 

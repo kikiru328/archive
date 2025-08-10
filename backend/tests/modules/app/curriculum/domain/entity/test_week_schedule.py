@@ -3,6 +3,7 @@ import pytest
 from app.modules.curriculum.domain.entity.week_schedule import WeekSchedule
 from app.modules.curriculum.domain.vo.week_number import WeekNumber
 from app.modules.curriculum.domain.vo.lessons import Lessons
+from backend.app.modules.curriculum.domain.vo.title import Title
 
 
 class TestWeekSchedule:
@@ -12,10 +13,13 @@ class TestWeekSchedule:
         """주차 스케줄 생성 성공 테스트"""
         # Given
         week_number = WeekNumber(1)
+        title = Title("개념")
         lessons = Lessons(["Python 기초", "변수와 자료형"])
 
         # When
-        week_schedule = WeekSchedule(week_number=week_number, lessons=lessons)
+        week_schedule = WeekSchedule(
+            week_number=week_number, title=title, lessons=lessons
+        )
 
         # Then
         assert week_schedule.week_number == week_number
@@ -160,5 +164,7 @@ class TestWeekSchedule:
     def _create_valid_week_schedule(self) -> WeekSchedule:
         """유효한 주차 스케줄 생성 헬퍼 메서드"""
         return WeekSchedule(
-            week_number=WeekNumber(1), lessons=Lessons(["Python 기초", "변수와 자료형"])
+            week_number=WeekNumber(1),
+            title=Title("개념"),
+            lessons=Lessons(["Python 기초", "변수와 자료형"]),
         )

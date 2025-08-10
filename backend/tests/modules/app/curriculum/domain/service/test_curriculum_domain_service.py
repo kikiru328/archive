@@ -5,6 +5,7 @@ from app.modules.curriculum.domain.service.curriculum_domain_service import (
     CurriculumDomainService,
 )
 from app.modules.curriculum.domain.vo import Visibility, WeekNumber
+from backend.app.modules.curriculum.domain.vo.title import Title
 
 
 @pytest.mark.asyncio
@@ -143,6 +144,7 @@ class TestCurriculumDomainService:
             curriculum.add_week_schedule(
                 curriculum.week_schedules[0].__class__(
                     week_number=WeekNumber(i),
+                    title=Title("개념"),
                     lessons=curriculum.week_schedules[0].lessons,
                 )
             )

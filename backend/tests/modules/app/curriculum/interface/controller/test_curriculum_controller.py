@@ -51,8 +51,10 @@ def sample_curriculum_dto():
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
         week_schedules=[
-            WeekScheduleDTO(week_number=1, lessons=["기초 개념", "환경 설정"]),
-            WeekScheduleDTO(week_number=2, lessons=["심화 학습", "실습"]),
+            WeekScheduleDTO(
+                week_number=1, title="개념", lessons=["기초 개념", "환경 설정"]
+            ),
+            WeekScheduleDTO(week_number=2, title="개념", lessons=["심화 학습", "실습"]),
         ],
     )
 

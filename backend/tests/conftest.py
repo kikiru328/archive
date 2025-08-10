@@ -108,9 +108,15 @@ def sample_curriculum() -> Curriculum:
     now = datetime.now(timezone.utc)
     schedules = [
         WeekSchedule(
-            week_number=WeekNumber(1), lessons=Lessons(["기초 개념", "환경 설정"])
+            week_number=WeekNumber(1),
+            title=Title("개념"),
+            lessons=Lessons(["기초 개념", "환경 설정"]),
         ),
-        WeekSchedule(week_number=WeekNumber(2), lessons=Lessons(["심화 학습", "실습"])),
+        WeekSchedule(
+            week_number=WeekNumber(2),
+            title=Title("개념"),
+            lessons=Lessons(["심화 학습", "실습"]),
+        ),
     ]
     return Curriculum(
         id="01HKQJQJQJQJQJQJQJQJQJ",

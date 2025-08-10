@@ -67,10 +67,12 @@ def sample_curriculum() -> Curriculum:
     week_schedules = [
         WeekSchedule(
             week_number=WeekNumber(1),
+            title=Title("개념"),
             lessons=Lessons(["Python 기초", "변수와 자료형"]),
         ),
         WeekSchedule(
             week_number=WeekNumber(2),
+            title=Title("개념"),
             lessons=Lessons(["조건문", "반복문", "함수"]),
         ),
     ]
@@ -93,6 +95,7 @@ def sample_public_curriculum() -> Curriculum:
     week_schedules = [
         WeekSchedule(
             week_number=WeekNumber(1),
+            title=Title("개념"),
             lessons=Lessons(["JavaScript 기초", "DOM 조작"]),
         ),
     ]
@@ -281,6 +284,7 @@ class TestCurriculumRepository:
                 week_schedules=[
                     WeekSchedule(
                         week_number=WeekNumber(1),
+                        title=Title("개념"),
                         lessons=Lessons([f"Lesson {i}"]),
                     )
                 ],
@@ -363,6 +367,7 @@ class TestCurriculumRepository:
         # When - 새로운 주차 추가
         new_week_schedule = WeekSchedule(
             week_number=WeekNumber(3),
+            title=Title("개념"),
             lessons=Lessons(["클래스", "상속"]),
         )
         sample_curriculum.add_week_schedule(new_week_schedule)
@@ -443,6 +448,7 @@ class TestCurriculumRepository:
                 week_schedules=[
                     WeekSchedule(
                         week_number=WeekNumber(1),
+                        title=Title("개념"),
                         lessons=Lessons([f"Lesson {i}"]),
                     )
                 ],
@@ -535,9 +541,21 @@ class TestCurriculumRepository:
         # Given - 역순으로 주차 스케줄 생성
         now = datetime.now(timezone.utc)
         week_schedules = [
-            WeekSchedule(week_number=WeekNumber(3), lessons=Lessons(["Week 3"])),
-            WeekSchedule(week_number=WeekNumber(1), lessons=Lessons(["Week 1"])),
-            WeekSchedule(week_number=WeekNumber(2), lessons=Lessons(["Week 2"])),
+            WeekSchedule(
+                week_number=WeekNumber(3),
+                title=Title("개념"),
+                lessons=Lessons(["Week 3"]),
+            ),
+            WeekSchedule(
+                week_number=WeekNumber(1),
+                title=Title("개념"),
+                lessons=Lessons(["Week 1"]),
+            ),
+            WeekSchedule(
+                week_number=WeekNumber(2),
+                title=Title("개념"),
+                lessons=Lessons(["Week 2"]),
+            ),
         ]
 
         curriculum = Curriculum(
@@ -588,6 +606,7 @@ class TestCurriculumRepositoryErrorHandling:
             week_schedules=[
                 WeekSchedule(
                     week_number=WeekNumber(1),
+                    title=Title("개념"),
                     lessons=Lessons(["Valid lesson"]),  # 유효한 레슨
                 )
             ],
