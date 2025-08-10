@@ -57,6 +57,7 @@ interface Summary {
 
 interface WeekSchedule {
   week_number: number;
+  title: string; 
   lessons: string[];
 }
 
@@ -313,14 +314,20 @@ const Summary: React.FC = () => {
     const curriculum = curriculums.find(c => c.id === summaryForm.curriculum_id);
     if (!curriculum) return [];
 
-    // week_schedules가 있으면 사용, 없으면 total_weeks 기반으로 생성
+    // 디버깅 로그 추가
+    console.log('선택된 커리큘럼:', curriculum);
+    console.log('week_schedules 존재 여부:', !!curriculum.week_schedules);
+    console.log('week_schedules 길이:', curriculum.week_schedules?.length);
+
     if (curriculum.week_schedules && curriculum.week_schedules.length > 0) {
+      console.log('실제 week_schedules 사용:', curriculum.week_schedules);
       return curriculum.week_schedules;
     } else if (curriculum.total_weeks) {
-      // total_weeks 기반으로 주차 목록 생성
+      console.log('임시 데이터 생성 - total_weeks:', curriculum.total_weeks);
       return Array.from({ length: curriculum.total_weeks }, (_, index) => ({
         week_number: index + 1,
-        lessons: [`${index + 1}주차 학습 내용`] // 기본 레슨
+        title: `${index + 1}주차 학습`,
+        lessons: [`${index + 1}주차 학습 내용`]
       }));
     }
     
@@ -543,7 +550,7 @@ const Summary: React.FC = () => {
                     >
                       {getSelectedCurriculumWeeks().map((week) => (
                         <option key={week.week_number} value={week.week_number}>
-                          {week.week_number}주차 ({week.lessons.length}개 레슨)
+                          {week.week_number}주차: {week.title} ({week.lessons.length}개 레슨)
                         </option>
                       ))}
                     </Select>

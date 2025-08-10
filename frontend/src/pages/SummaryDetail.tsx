@@ -65,6 +65,7 @@ interface Curriculum {
   title: string;
   week_schedules: Array<{
     week_number: number;
+    title: string;
     lessons: string[];
   }>;
 }
@@ -204,10 +205,10 @@ const SummaryDetail: React.FC = () => {
     const week = curriculum.week_schedules.find(w => w.week_number === summary.week_number);
     
     if (summary.lesson_index !== undefined && week && week.lessons[summary.lesson_index]) {
-      return week.lessons[summary.lesson_index];
+      return `${week.title} - ${week.lessons[summary.lesson_index]}`;
     }
     
-    return `${summary.week_number}주차 전체`;
+    return week?.title || `${summary.week_number}주차`;
   };
 
   const formatDate = (dateString: string) => {

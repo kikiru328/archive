@@ -39,6 +39,7 @@ import { curriculumAPI } from '../services/api';
 
 interface WeekSchedule {
   week_number: number;
+  title: string; 
   lessons: string[];
 }
 

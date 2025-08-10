@@ -94,7 +94,7 @@ export const curriculumAPI = {
   delete: (id: string) => api.delete(`/curriculums/${id}`),
   
   // 주차 추가
-  addWeek: (curriculumId: string, data: { week_number: number; lessons: string[] }) =>
+  addWeek: (curriculumId: string, data: { week_number: number; title: string; lessons: string[] }) =>
     api.post(`/curriculums/${curriculumId}/weeks`, data),
   
   // 주차 삭제

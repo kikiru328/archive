@@ -54,6 +54,7 @@ import { curriculumAPI } from '../services/api';
 
 interface WeekSchedule {
   week_number: number;
+  title: string; 
   lessons: string[];
 }
 
@@ -74,6 +75,7 @@ interface LessonForm {
 
 interface WeekForm {
   week_number: number;
+  title: string; 
   lessons: string[];
 }
 
@@ -89,7 +91,7 @@ const CurriculumDetail: React.FC = () => {
   const [editingLessonWeek, setEditingLessonWeek] = useState<number | null>(null);
   const [editingLessonIndex, setEditingLessonIndex] = useState<number | null>(null);
   const [lessonForm, setLessonForm] = useState<LessonForm>({ lesson: '' });
-  const [weekForm, setWeekForm] = useState<WeekForm>({ week_number: 1, lessons: [''] });
+  const [weekForm, setWeekForm] = useState<WeekForm>({ week_number: 1, title: '', lessons: [''] });
   const [editForm, setEditForm] = useState({ title: '', visibility: 'PRIVATE' as 'PUBLIC' | 'PRIVATE' });
   
   const { isOpen: isLessonModalOpen, onOpen: onLessonModalOpen, onClose: onLessonModalClose } = useDisclosure();
@@ -208,7 +210,11 @@ const CurriculumDetail: React.FC = () => {
 
   const handleAddWeek = () => {
     const nextWeekNumber = curriculum ? Math.max(...curriculum.week_schedules.map(w => w.week_number)) + 1 : 1;
-    setWeekForm({ week_number: nextWeekNumber, lessons: [''] });
+    setWeekForm({ 
+      week_number: nextWeekNumber, 
+      title: '',  // 추가
+      lessons: [''] 
+    });
     onWeekModalOpen();
   };
 
@@ -226,6 +232,7 @@ const CurriculumDetail: React.FC = () => {
       const validLessons = weekForm.lessons.filter(lesson => lesson.trim());
       await curriculumAPI.addWeek(curriculum.id, {
         week_number: weekForm.week_number,
+        title: weekForm.title,
         lessons: validLessons
       });
       
@@ -581,9 +588,14 @@ const CurriculumDetail: React.FC = () => {
                       <Box flex="1" textAlign="left">
                         <HStack justify="space-between">
                           <HStack>
-                            <Text fontWeight="semibold" color={textColor}>
-                              {week.week_number}주차
-                            </Text>
+                            <VStack align="start" spacing={1}>
+                              <Text fontWeight="semibold" color={textColor}>
+                                {week.week_number}주차
+                              </Text>
+                              <Text fontSize="sm" color={secondaryTextColor} fontWeight="normal">
+                                {week.title}
+                              </Text>
+                            </VStack>
                             <Badge colorScheme="blue" variant="subtle">
                               {week.lessons.length}개 레슨
                             </Badge>
@@ -746,6 +758,16 @@ const CurriculumDetail: React.FC = () => {
             <ModalCloseButton />
             <ModalBody>
               <VStack spacing={4}>
+                <FormControl isRequired>
+                  <FormLabel color={textColor}>주차 제목</FormLabel>
+                  <Input
+                    placeholder="주차 제목을 입력하세요"
+                    value={weekForm.title}
+                    onChange={(e) => setWeekForm({ ...weekForm, title: e.target.value })}
+                    color={textColor}
+                    borderColor={borderColor}
+                  />
+                </FormControl>
                 <FormControl isRequired>
                   <FormLabel color={textColor}>주차 번호</FormLabel>
                   <Input
