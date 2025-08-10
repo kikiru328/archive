@@ -30,8 +30,8 @@ RUN poetry install --no-root
 
 COPY . .
 
+COPY ./script/startup.sh /workspace/script/startup.sh
 RUN chmod +x /workspace/script/startup.sh
-COPY script/startup.sh /workspace/script/startup.sh
 
 EXPOSE 8000
 CMD ["sh", "/workspace/script/startup.sh"]

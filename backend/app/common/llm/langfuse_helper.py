@@ -18,6 +18,9 @@ class LangfuseManager:
         return cls._instance
 
     def __init__(self):
+        os.environ["LANGFUSE_LOG_LEVEL"] = "WARNING"
+        os.environ["LANGFUSE_LOG_DIR"] = "/workspace/backend/app/logs"
+
         if hasattr(self, "_initialized"):
             return
 

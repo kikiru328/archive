@@ -64,7 +64,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./app/common/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./backend/app/common/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -86,8 +86,8 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin123
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./app/common/monitoring/grafana/provisioning:/etc/grafana/provisioning
-      - ./app/common/monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./backend/app/common/monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./backend/app/common/monitoring/grafana/dashboards:/var/lib/grafana/dashboards
     networks:
       - curriculum_network
 

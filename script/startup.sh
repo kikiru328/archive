@@ -3,14 +3,16 @@ set -e
 
 echo "🚀 Starting curriculum platform..."
 
+cd /workspace/backend
+
 # 현재 디렉토리와 파일 확인
 echo "📁 Current directory: $(pwd)"
 
 # 로그 디렉토리 생성
 echo "📝 Setting up logging directories..."
-mkdir -p /app/logs/llm
-chmod 755 /app/logs
-chmod 755 /app/logs/llm
+mkdir -p ./app/logs/llm
+chmod 755 ./app/logs
+chmod 755 ./app/logs/llm
 echo "✅ Log directories created!"
 
 # 환경변수 확인 (비밀번호는 마스킹)
