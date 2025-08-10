@@ -9,7 +9,7 @@ services:
       MYSQL_PASSWORD: "${DATABASE_PASSWORD}"
       MYSQL_ROOT_PASSWORD: "${DATABASE_ROOT_PASSWORD}"
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT}:3306"
     networks:
       - curriculum_network
     volumes:
@@ -33,7 +33,7 @@ services:
     volumes:
       - .:/workspace
     ports:
-      - "8000:8000"
+      - "${WEB_PORT}:8000"
     networks:
       - curriculum_network
 
@@ -42,7 +42,7 @@ services:
     container_name: "${APP_NAME}-redis"
     command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"  # 환경변수 사용
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
       # redis.conf는 더 이상 필요하지 않거나 동적으로 생성
@@ -62,7 +62,7 @@ services:
     image: prom/prometheus:latest
     container_name: "${APP_NAME}-prometheus"
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PORT}:9090"
     volumes:
       - ./backend/app/common/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -80,7 +80,7 @@ services:
     image: grafana/grafana:latest
     container_name: "${APP_NAME}-grafana"
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT}:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin123
