@@ -636,24 +636,39 @@ const CurriculumDetail: React.FC = () => {
                                       {index + 1}
                                     </Text>
                                   </Box>
-                                  <Text color={textColor}>{lesson}</Text>
+                                  <Text 
+                                    color={textColor} 
+                                    cursor="pointer"
+                                    _hover={{ color: "blue.500", textDecoration: "underline" }}
+                                    onClick={() => {
+                                      const params = new URLSearchParams({
+                                        curriculum_id: curriculum.id,
+                                        week_number: week.week_number.toString(),
+                                        lesson_index: index.toString()
+                                      });
+                                      navigate(`/summary?${params.toString()}`);
+                                    }}
+                                  >
+                                    {lesson}
+                                  </Text>
                                 </HStack>
                                 <HStack spacing={1}>
                                   <IconButton
-                                    aria-label="완료 표시"
+                                    aria-label="요약 보기"
                                     icon={<CheckIcon />}
                                     size="sm"
                                     variant="ghost"
                                     colorScheme="green"
-                                  />
-                                  <IconButton
-                                    aria-label="요약 작성"
-                                    icon={<TimeIcon />}
-                                    size="sm"
-                                    variant="ghost"
-                                    colorScheme="blue"
+                                    title="요약 보기"
                                     onClick={() => {
-                                      navigate(`/summary?curriculum_id=${curriculum.id}&week_number=${week.week_number}&lesson_index=${index}`);
+                                      // TODO: 해당 레슨의 요약 목록 페이지로 이동
+                                      const params = new URLSearchParams({
+                                        curriculum_id: curriculum.id,
+                                        week_number: week.week_number.toString(),
+                                        lesson_index: index.toString(),
+                                        view: 'list'
+                                      });
+                                      navigate(`/summary?${params.toString()}`);
                                     }}
                                   />
                                   <IconButton
@@ -851,3 +866,86 @@ const CurriculumDetail: React.FC = () => {
                     </Button>
                     <Button
                       variant={editForm.visibility === 'PUBLIC' ? 'solid' : 'outline'}
+                      colorScheme="green"
+                      onClick={() => setEditForm({ ...editForm, visibility: 'PUBLIC' })}
+                      size="sm"
+                    >
+                      공개
+                    </Button>
+                  </HStack>
+                </FormControl>
+              </VStack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onEditModalClose}>
+                취소
+              </Button>
+              <Button colorScheme="blue" onClick={handleEditCurriculum}>
+                수정하기
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* 커리큘럼 삭제 확인 모달 */}
+        <Modal isOpen={isDeleteModalOpen} onClose={onDeleteModalClose}>
+          <ModalOverlay />
+          <ModalContent bg={cardBg} color={textColor}>
+            <ModalHeader>커리큘럼 삭제</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <VStack spacing={4}>
+                <Text color={textColor}>
+                  정말로 이 커리큘럼을 삭제하시겠습니까?
+                </Text>
+                <Text fontSize="sm" color="red.500">
+                  이 작업은 되돌릴 수 없습니다.
+                </Text>
+              </VStack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onDeleteModalClose}>
+                취소
+              </Button>
+              <Button colorScheme="red" onClick={handleDeleteCurriculum}>
+                삭제하기
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* 주차 삭제 확인 모달 */}
+        <Modal isOpen={isDeleteWeekModalOpen} onClose={onDeleteWeekModalClose}>
+          <ModalOverlay />
+          <ModalContent bg={cardBg} color={textColor}>
+            <ModalHeader>주차 삭제</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <VStack spacing={4}>
+                <Text color={textColor}>
+                  {editingWeek}주차를 삭제하시겠습니까?
+                </Text>
+                <Text fontSize="sm" color="red.500">
+                  이 작업은 되돌릴 수 없습니다.
+                </Text>
+              </VStack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onDeleteWeekModalClose}>
+                취소
+              </Button>
+              <Button 
+                colorScheme="red" 
+                onClick={() => editingWeek && handleDeleteWeek(editingWeek)}
+              >
+                삭제하기
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </VStack>
+    </Container>
+  );
+};
+
+export default CurriculumDetail;

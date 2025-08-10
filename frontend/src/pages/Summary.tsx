@@ -33,6 +33,11 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
 } from '@chakra-ui/react';
 import { 
   AddIcon, 
@@ -47,10 +52,10 @@ import { summaryAPI, curriculumAPI } from '../services/api';
 interface Summary {
   id: string;
   curriculum_id: string;
-  curriculum_title?: string;
   week_number: number;
-  lesson_title?: string;
   content: string;
+  content_length: number;
+  snippet: string;
   created_at: string;
   updated_at: string;
 }
@@ -67,7 +72,6 @@ interface Curriculum {
 interface SummaryForm {
   curriculum_id: string;
   week_number: number;
-  lesson_index?: number;
   content: string;
 }
 
@@ -78,6 +82,7 @@ const Summary: React.FC = () => {
   
   const [summaries, setSummaries] = useState<Summary[]>([]);
   const [curriculums, setCurriculums] = useState<Curriculum[]>([]);
+  const [selectedCurriculum, setSelectedCurriculum] = useState<Curriculum | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -87,6 +92,7 @@ const Summary: React.FC = () => {
     week_number: 1,
     content: ''
   });
+  const [currentView, setCurrentView] = useState<'create' | 'list'>('list');
   
   const { isOpen: isCreateModalOpen, onOpen: onCreateModalOpen, onClose: onCreateModalClose } = useDisclosure();
   const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure();
@@ -98,23 +104,36 @@ const Summary: React.FC = () => {
   const borderColor = useColorModeValue('gray.200', 'gray.600');
 
   useEffect(() => {
-    fetchData();
-    
-    // URL 파라미터에서 커리큘럼 정보 가져오기
+    initializePage();
+  }, [searchParams]);
+
+  const initializePage = async () => {
+    // URL 파라미터에서 정보 가져오기
     const curriculumId = searchParams.get('curriculum_id');
     const weekNumber = searchParams.get('week_number');
     const lessonIndex = searchParams.get('lesson_index');
-    
+    const view = searchParams.get('view');
+
+    await fetchData();
+
     if (curriculumId && weekNumber) {
       setSummaryForm(prev => ({
         ...prev,
         curriculum_id: curriculumId,
         week_number: parseInt(weekNumber),
-        lesson_index: lessonIndex ? parseInt(lessonIndex) : undefined
       }));
-      onCreateModalOpen();
+
+      if (view === 'list') {
+        // 요약 목록 보기 모드
+        setCurrentView('list');
+        await fetchSummariesByCurriculumAndWeek(curriculumId, parseInt(weekNumber));
+      } else {
+        // 요약 작성 모드
+        setCurrentView('create');
+        onCreateModalOpen();
+      }
     }
-  }, [searchParams, onCreateModalOpen]);
+  };
 
   const fetchData = async () => {
     try {
@@ -127,13 +146,34 @@ const Summary: React.FC = () => {
         summaryAPI.getAll()
       ]);
       
-      setCurriculums(curriculumResponse.data.curriculums || []);
-      setSummaries(summaryResponse.data || []);
+      const curriculumData = curriculumResponse.data.curriculums || [];
+      setCurriculums(curriculumData);
+
+      const summaryData = summaryResponse.data.summaries || [];
+      setSummaries(summaryData);
     } catch (error: any) {
       console.error('데이터 조회 실패:', error);
       setError('데이터를 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSummariesByCurriculumAndWeek = async (curriculumId: string, weekNumber: number) => {
+    try {
+      const response = await summaryAPI.getByWeek(curriculumId, weekNumber);
+      setSummaries(response.data.summaries || []);
+      
+      // 선택된 커리큘럼 정보 설정
+      const curriculum = curriculums.find(c => c.id === curriculumId);
+      setSelectedCurriculum(curriculum || null);
+    } catch (error: any) {
+      console.error('주차별 요약 조회 실패:', error);
+      toast({
+        title: '요약을 불러오는데 실패했습니다',
+        status: 'error',
+        duration: 3000,
+      });
     }
   };
 
@@ -152,7 +192,6 @@ const Summary: React.FC = () => {
       await summaryAPI.create({
         curriculum_id: summaryForm.curriculum_id,
         week_number: summaryForm.week_number,
-        lesson_index: summaryForm.lesson_index,
         content: summaryForm.content.trim()
       });
       
@@ -266,7 +305,7 @@ const Summary: React.FC = () => {
       return week.lessons[lessonIndex];
     }
     
-    return `${weekNumber}주차 전체`;
+    return `${weekNumber}주차`;
   };
 
   const formatDate = (dateString: string) => {
@@ -317,14 +356,30 @@ const Summary: React.FC = () => {
 
         {/* 헤더 */}
         <HStack justify="space-between" align="center">
-          <Heading size="lg" color={textColor}>학습 요약</Heading>
-          <Button
-            leftIcon={<AddIcon />}
-            colorScheme="blue"
-            onClick={onCreateModalOpen}
-          >
-            새 요약 작성
-          </Button>
+          <Heading size="lg" color={textColor}>
+            {selectedCurriculum ? `${selectedCurriculum.title} - 요약` : '학습 요약'}
+          </Heading>
+          <HStack>
+            {selectedCurriculum && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCurrentView('list');
+                  setSelectedCurriculum(null);
+                  fetchData();
+                }}
+              >
+                전체 보기
+              </Button>
+            )}
+            <Button
+              leftIcon={<AddIcon />}
+              colorScheme="blue"
+              onClick={onCreateModalOpen}
+            >
+              새 요약 작성
+            </Button>
+          </HStack>
         </HStack>
 
         {/* 에러 메시지 */}
@@ -342,7 +397,7 @@ const Summary: React.FC = () => {
               <VStack spacing={4} py={8}>
                 <StarIcon boxSize={12} color="gray.400" />
                 <Heading size="md" color={secondaryTextColor}>
-                  아직 작성된 요약이 없습니다
+                  {selectedCurriculum ? '이 커리큘럼에는 아직 작성된 요약이 없습니다' : '아직 작성된 요약이 없습니다'}
                 </Heading>
                 <Text color={secondaryTextColor} textAlign="center">
                   학습한 내용을 요약해보세요!<br />
@@ -381,7 +436,7 @@ const Summary: React.FC = () => {
                         {getCurriculumTitle(summary.curriculum_id)}
                       </Text>
                       <Heading size="sm" color={textColor} noOfLines={1}>
-                        {getLessonTitle(summary.curriculum_id, summary.week_number, summary.lesson_title ? 0 : undefined)}
+                        {getLessonTitle(summary.curriculum_id, summary.week_number)}
                       </Heading>
                       <Badge colorScheme="blue" variant="subtle" size="sm">
                         {summary.week_number}주차
@@ -395,7 +450,7 @@ const Summary: React.FC = () => {
                       noOfLines={3}
                       minH="60px"
                     >
-                      {summary.content}
+                      {summary.snippet}
                     </Text>
 
                     {/* 메타 정보 */}
@@ -490,38 +545,20 @@ const Summary: React.FC = () => {
                   </FormControl>
                 )}
 
-                {summaryForm.curriculum_id && getSelectedWeekLessons().length > 0 && (
-                  <FormControl>
-                    <FormLabel color={textColor}>레슨 선택 (선택사항)</FormLabel>
-                    <Select
-                      placeholder="전체 주차 요약"
-                      value={summaryForm.lesson_index ?? ''}
-                      onChange={(e) => setSummaryForm({ 
-                        ...summaryForm, 
-                        lesson_index: e.target.value ? parseInt(e.target.value) : undefined 
-                      })}
-                      color={textColor}
-                      borderColor={borderColor}
-                    >
-                      {getSelectedWeekLessons().map((lesson, index) => (
-                        <option key={index} value={index}>
-                          {index + 1}. {lesson}
-                        </option>
-                      ))}
-                    </Select>
-                  </FormControl>
-                )}
-
                 <FormControl isRequired>
                   <FormLabel color={textColor}>요약 내용</FormLabel>
                   <Textarea
-                    placeholder="학습한 내용을 요약해주세요..."
+                    placeholder="학습한 내용을 요약해주세요... (최소 100자)"
                     value={summaryForm.content}
                     onChange={(e) => setSummaryForm({ ...summaryForm, content: e.target.value })}
                     color={textColor}
                     borderColor={borderColor}
                     rows={8}
+                    minLength={100}
                   />
+                  <Text fontSize="xs" color={secondaryTextColor} mt={1}>
+                    {summaryForm.content.length}/5000자 (최소 100자 필요)
+                  </Text>
                 </FormControl>
               </VStack>
             </ModalBody>
@@ -534,6 +571,7 @@ const Summary: React.FC = () => {
                 onClick={handleCreateSummary}
                 isLoading={submitting}
                 loadingText="저장 중..."
+                isDisabled={summaryForm.content.length < 100}
               >
                 저장하기
               </Button>
@@ -563,7 +601,11 @@ const Summary: React.FC = () => {
                     color={textColor}
                     borderColor={borderColor}
                     rows={8}
+                    minLength={100}
                   />
+                  <Text fontSize="xs" color={secondaryTextColor} mt={1}>
+                    {summaryForm.content.length}/5000자 (최소 100자 필요)
+                  </Text>
                 </FormControl>
               </VStack>
             </ModalBody>
@@ -576,6 +618,7 @@ const Summary: React.FC = () => {
                 onClick={handleUpdateSummary}
                 isLoading={submitting}
                 loadingText="수정 중..."
+                isDisabled={summaryForm.content.length < 100}
               >
                 수정하기
               </Button>
