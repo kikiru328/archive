@@ -1,9 +1,14 @@
 import pytest
 from datetime import datetime, timedelta, timezone
 
-from app.modules.curriculum.domain.entity.curriculum import Curriculum
-from app.modules.curriculum.domain.entity.week_schedule import WeekSchedule
-from app.modules.curriculum.domain.vo import Title, Visibility, WeekNumber, Lessons
+from backend.app.modules.curriculum.domain.entity.curriculum import Curriculum
+from backend.app.modules.curriculum.domain.entity.week_schedule import WeekSchedule
+from backend.app.modules.curriculum.domain.vo import (
+    Title,
+    Visibility,
+    WeekNumber,
+    Lessons,
+)
 
 
 class TestCurriculum:

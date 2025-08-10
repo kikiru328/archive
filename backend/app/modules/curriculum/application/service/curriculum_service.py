@@ -38,7 +38,6 @@ from app.modules.user.domain.vo.role import RoleVO
 from app.modules.social.domain.repository.follow_repo import IFollowRepository
 from app.common.monitoring.metrics import increment_curriculum_creation
 from app.common.llm.decorators import trace_llm_operation
-import json, re, logging
 
 
 class CurriculumService:
