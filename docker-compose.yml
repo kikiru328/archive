@@ -91,7 +91,23 @@ services:
     networks:
       - curriculum_network
 
-      
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: "${APP_NAME}-frontend-dev"
+    restart: unless-stopped
+    # CRA는 0.0.0.0로 바인딩되어 자동 감지됨
+    ports:
+      - "${FRONTEND_PORT}:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      app:
+        condition: service_started
+    networks:
+      - curriculum_network
 volumes:
   db_data:
   redis_data:
