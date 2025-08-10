@@ -13,6 +13,9 @@ const api = axios.create({
 // JWT 토큰 인터셉터
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
+  console.log('API 요청:', config.method?.toUpperCase(), config.url);
+  console.log('토큰 사용:', token ? '있음' : '없음');
+  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -21,9 +24,14 @@ api.interceptors.request.use((config) => {
 
 // 응답 인터셉터 추가 (에러 처리용)
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('API 응답 성공:', response.config.url, response.status);
+    return response;
+  },
   (error) => {
     console.error('API 에러:', error.response?.data);
+    console.error('에러 상태:', error.response?.status);
+    console.error('에러 URL:', error.config?.url);
     return Promise.reject(error);
   }
 );
@@ -63,7 +71,7 @@ export const curriculumAPI = {
     details: data.details || ''
   }),
   
-  // 내 커리큘럼 목록 조회
+  // 내 커리큘럼 목록 조회 - 백엔드에서 확인된 정상 작동 엔드포인트
   getAll: (params?: { page?: number; items_per_page?: number }) => 
     api.get('/curriculums/me', { params }),
   
@@ -107,40 +115,84 @@ export const curriculumAPI = {
 };
 
 export const summaryAPI = {
-  // 요약 생성
+  // 요약 생성 - 백엔드 라우팅에 맞게 수정
   create: (data: { 
     curriculum_id: string; 
     week_number: number; 
-    lesson_index?: number;
     content: string;
-  }) => api.post('/summaries', data),
+  }) => api.post(`/curriculums/${data.curriculum_id}/weeks/${data.week_number}/summaries`, {
+    content: data.content
+  }),
   
   // 내 요약 목록 조회
   getAll: (params?: { page?: number; items_per_page?: number }) => 
-    api.get('/summaries/me', { params }),
+    api.get('/users/me/summaries', { params }),
   
   // 특정 요약 조회
-  getById: (id: string) => api.get(`/summaries/${id}`),
+  getById: (id: string) => api.get(`/curriculums/summaries/${id}`),
   
-  // 커리큘럼/주차별 요약 조회
-  getByWeek: (curriculumId: string, week: number) =>
-    api.get(`/summaries/${curriculumId}/${week}`),
+  // 커리큘럼별 요약 조회
+  getByCurriculum: (curriculumId: string, params?: { page?: number; items_per_page?: number }) =>
+    api.get(`/curriculums/${curriculumId}/summaries`, { params }),
+  
+  // 특정 커리큘럼의 특정 주차 요약 조회
+  getByWeek: (curriculumId: string, weekNumber: number, params?: { page?: number; items_per_page?: number }) =>
+    api.get(`/curriculums/${curriculumId}/weeks/${weekNumber}/summaries`, { params }),
   
   // 요약 수정
   update: (id: string, data: { content: string }) =>
-    api.patch(`/summaries/${id}`, data),
+    api.put(`/curriculums/summaries/${id}`, data),
   
   // 요약 삭제
-  delete: (id: string) => api.delete(`/summaries/${id}`),
-  
-  // AI 피드백 요청
-  requestFeedback: (summaryId: string) =>
-    api.post(`/summaries/${summaryId}/feedback`),
+  delete: (id: string) => api.delete(`/curriculums/summaries/${id}`),
 };
 
 export const feedbackAPI = {
-  getByWeek: (curriculumId: string, week: number) =>
-    api.get(`/feedback/${curriculumId}/${week}`),
+  // AI 피드백 생성
+  generateFeedback: (summaryId: string) =>
+    api.post(`/summaries/${summaryId}/feedbacks/generate`, {}),
+  
+  // 요약의 피드백 조회
+  getBySummary: (summaryId: string) =>
+    api.get(`/summaries/${summaryId}/feedbacks`),
+  
+  // 특정 피드백 조회
+  getById: (feedbackId: string) =>
+    api.get(`/summaries/feedbacks/${feedbackId}`),
+  
+  // 피드백 삭제
+  delete: (feedbackId: string) =>
+    api.delete(`/summaries/feedbacks/${feedbackId}`),
+  
+  // 커리큘럼별 피드백 조회
+  getByCurriculum: (curriculumId: string, params?: { page?: number; items_per_page?: number }) =>
+    api.get(`/curriculums/${curriculumId}/feedbacks`, { params }),
+  
+  // 내 피드백 목록 조회
+  getAll: (params?: { 
+    page?: number; 
+    items_per_page?: number; 
+    min_score?: number; 
+    max_score?: number; 
+  }) => api.get('/users/me/feedbacks', { params }),
+};
+
+export const learningStatsAPI = {
+  // 내 학습 통계 조회
+  getMyStats: (params?: { days?: number }) =>
+    api.get('/users/me/learning/stats', { params }),
+  
+  // 학습 현황 간단 요약 (대시보드용)
+  getOverview: () =>
+    api.get('/users/me/learning/overview'),
+  
+  // 커리큘럼별 진도 현황
+  getProgress: () =>
+    api.get('/users/me/learning/progress'),
+  
+  // 학습 연속성 정보
+  getStreak: () =>
+    api.get('/users/me/learning/streak'),
 };
 
 export default api;

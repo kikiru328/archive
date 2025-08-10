@@ -33,11 +33,6 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
 } from '@chakra-ui/react';
 import { 
   AddIcon, 
@@ -60,13 +55,16 @@ interface Summary {
   updated_at: string;
 }
 
+interface WeekSchedule {
+  week_number: number;
+  lessons: string[];
+}
+
 interface Curriculum {
   id: string;
   title: string;
-  week_schedules: Array<{
-    week_number: number;
-    lessons: string[];
-  }>;
+  total_weeks: number;
+  week_schedules?: WeekSchedule[];
 }
 
 interface SummaryForm {
@@ -145,6 +143,9 @@ const Summary: React.FC = () => {
         curriculumAPI.getAll(),
         summaryAPI.getAll()
       ]);
+      
+      console.log('커리큘럼 응답:', curriculumResponse.data);
+      console.log('요약 응답:', summaryResponse.data);
       
       const curriculumData = curriculumResponse.data.curriculums || [];
       setCurriculums(curriculumData);
@@ -297,17 +298,6 @@ const Summary: React.FC = () => {
     return curriculum?.title || '알 수 없는 커리큘럼';
   };
 
-  const getLessonTitle = (curriculumId: string, weekNumber: number, lessonIndex?: number) => {
-    const curriculum = curriculums.find(c => c.id === curriculumId);
-    const week = curriculum?.week_schedules.find(w => w.week_number === weekNumber);
-    
-    if (lessonIndex !== undefined && week && week.lessons[lessonIndex]) {
-      return week.lessons[lessonIndex];
-    }
-    
-    return `${weekNumber}주차`;
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR', {
       year: 'numeric',
@@ -316,10 +306,25 @@ const Summary: React.FC = () => {
     });
   };
 
+  // 선택된 커리큘럼의 주차 목록 생성 (week_schedules가 없어도 total_weeks 기반으로 생성)
   const getSelectedCurriculumWeeks = () => {
     if (!summaryForm.curriculum_id) return [];
+    
     const curriculum = curriculums.find(c => c.id === summaryForm.curriculum_id);
-    return curriculum?.week_schedules || [];
+    if (!curriculum) return [];
+
+    // week_schedules가 있으면 사용, 없으면 total_weeks 기반으로 생성
+    if (curriculum.week_schedules && curriculum.week_schedules.length > 0) {
+      return curriculum.week_schedules;
+    } else if (curriculum.total_weeks) {
+      // total_weeks 기반으로 주차 목록 생성
+      return Array.from({ length: curriculum.total_weeks }, (_, index) => ({
+        week_number: index + 1,
+        lessons: [`${index + 1}주차 학습 내용`] // 기본 레슨
+      }));
+    }
+    
+    return [];
   };
 
   const getSelectedWeekLessons = () => {
@@ -436,7 +441,7 @@ const Summary: React.FC = () => {
                         {getCurriculumTitle(summary.curriculum_id)}
                       </Text>
                       <Heading size="sm" color={textColor} noOfLines={1}>
-                        {getLessonTitle(summary.curriculum_id, summary.week_number)}
+                        {summary.week_number}주차
                       </Heading>
                       <Badge colorScheme="blue" variant="subtle" size="sm">
                         {summary.week_number}주차
@@ -543,6 +548,22 @@ const Summary: React.FC = () => {
                       ))}
                     </Select>
                   </FormControl>
+                )}
+
+                {/* 선택된 주차의 레슨 정보 표시 */}
+                {summaryForm.curriculum_id && summaryForm.week_number && (
+                  <Box w="100%" p={3} bg="blue.50" borderRadius="md" borderColor={borderColor}>
+                    <Text fontSize="sm" fontWeight="semibold" color="blue.700" mb={2}>
+                      {summaryForm.week_number}주차 학습 내용:
+                    </Text>
+                    <VStack align="start" spacing={1}>
+                      {getSelectedWeekLessons().map((lesson, index) => (
+                        <Text key={index} fontSize="sm" color="blue.600">
+                          • {lesson}
+                        </Text>
+                      ))}
+                    </VStack>
+                  </Box>
                 )}
 
                 <FormControl isRequired>
