@@ -196,3 +196,92 @@ export const learningStatsAPI = {
 };
 
 export default api;
+
+export const tagAPI = {
+  // 태그 관련
+  getPopularTags: (params?: { limit?: number; min_usage?: number }) =>
+    api.get('/tags/popular', { params }),
+  
+  searchTags: (params: { q: string; limit?: number }) =>
+    api.get('/tags/search', { params }),
+  
+  getAll: (params?: { page?: number; items_per_page?: number; search?: string; min_usage?: number }) =>
+    api.get('/tags', { params }),
+  
+  create: (data: { name: string }) =>
+    api.post('/tags', data),
+  
+  update: (id: string, data: { name?: string }) =>
+    api.patch(`/tags/${id}`, data),
+  
+  delete: (id: string) =>
+    api.delete(`/tags/${id}`),
+  
+  getStatistics: () =>
+    api.get('/tags/statistics'),
+};
+
+export const categoryAPI = {
+  // 카테고리 관련
+  getActive: () =>
+    api.get('/categories/active'),
+  
+  getAll: (params?: { page?: number; items_per_page?: number; include_inactive?: boolean }) =>
+    api.get('/categories', { params }),
+  
+  getById: (id: string) =>
+    api.get(`/categories/${id}`),
+  
+  create: (data: { name: string; description?: string; color: string; icon?: string; sort_order?: number }) =>
+    api.post('/categories', data),
+  
+  update: (id: string, data: { name?: string; description?: string; color?: string; icon?: string; sort_order?: number; is_active?: boolean }) =>
+    api.patch(`/categories/${id}`, data),
+  
+  delete: (id: string) =>
+    api.delete(`/categories/${id}`),
+  
+  activate: (id: string) =>
+    api.post(`/categories/${id}/activate`),
+  
+  deactivate: (id: string) =>
+    api.post(`/categories/${id}/deactivate`),
+  
+  reorder: (categories: Array<{ id: string; sort_order: number }>) =>
+    api.post('/categories/reorder', { categories }),
+  
+  getStatistics: () =>
+    api.get('/categories/statistics'),
+};
+
+export const curriculumTagAPI = {
+  // 커리큘럼-태그 관련
+  addTags: (curriculumId: string, tagNames: string[]) =>
+    api.post(`/curriculums/${curriculumId}/tags`, { tag_names: tagNames }),
+  
+  removeTag: (curriculumId: string, tagName: string) =>
+    api.delete(`/curriculums/${curriculumId}/tags`, { data: { tag_name: tagName } }),
+  
+  assignCategory: (curriculumId: string, categoryId: string) =>
+    api.post(`/curriculums/${curriculumId}/category`, { category_id: categoryId }),
+  
+  removeCategory: (curriculumId: string) =>
+    api.delete(`/curriculums/${curriculumId}/category`),
+  
+  getTagsAndCategory: (curriculumId: string) =>
+    api.get(`/curriculums/${curriculumId}/tags-and-category`),
+  
+  // 검색
+  findByTags: (tagNames: string[], params?: { page?: number; items_per_page?: number }) =>
+    api.get('/curriculums/search/by-tags', { params: { tag_names: tagNames, ...params } }),
+  
+  findByCategory: (categoryId: string, params?: { page?: number; items_per_page?: number }) =>
+    api.get(`/curriculums/search/by-category/${categoryId}`, { params }),
+  
+  // 사용자 활동
+  getMyTaggedCurriculums: (params?: { page?: number; items_per_page?: number }) =>
+    api.get('/curriculums/tags/my-tagged-curriculums', { params }),
+  
+  getMyCategorizedCurriculums: (params?: { page?: number; items_per_page?: number }) =>
+    api.get('/curriculums/categories/my-categorized-curriculums', { params }),
+};

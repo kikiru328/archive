@@ -50,7 +50,7 @@ import {
   TimeIcon 
 } from '@chakra-ui/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { curriculumAPI } from '../services/api';
+import { curriculumAPI, curriculumTagAPI, tagAPI } from '../services/api';
 
 interface WeekSchedule {
   week_number: number;
@@ -66,6 +66,8 @@ interface CurriculumDetail {
   created_at: string;
   updated_at: string;
   week_schedules: WeekSchedule[];
+  category?: Category;
+  tags?: Tag[];
 }
 
 interface LessonForm {
@@ -78,7 +80,21 @@ interface WeekForm {
   title: string; 
   lessons: string[];
 }
+interface Tag {
+  id: string;
+  name: string;
+  usage_count: number;
+  is_popular: boolean;
+}
 
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+  icon?: string;
+  is_active: boolean;
+  usage_count: number;
+}
 const CurriculumDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -93,7 +109,12 @@ const CurriculumDetail: React.FC = () => {
   const [lessonForm, setLessonForm] = useState<LessonForm>({ lesson: '' });
   const [weekForm, setWeekForm] = useState<WeekForm>({ week_number: 1, title: '', lessons: [''] });
   const [editForm, setEditForm] = useState({ title: '', visibility: 'PRIVATE' as 'PUBLIC' | 'PRIVATE' });
-  
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [category, setCategory] = useState<Category | null>(null);
+  const [newTag, setNewTag] = useState('');
+  const [tagSuggestions, setTagSuggestions] = useState<Tag[]>([]);
+  const [loadingTags, setLoadingTags] = useState(false);
+
   const { isOpen: isLessonModalOpen, onOpen: onLessonModalOpen, onClose: onLessonModalClose } = useDisclosure();
   const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure();
   const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure();
@@ -115,15 +136,30 @@ const CurriculumDetail: React.FC = () => {
     }
   }, [id]);
 
+  const fetchTagsAndCategory = async (curriculumId: string) => {
+    try {
+      const response = await curriculumTagAPI.getTagsAndCategory(curriculumId);
+      setTags(response.data.tags || []);
+      setCategory(response.data.category || null);
+    } catch (error) {
+      console.log('태그/카테고리 정보 없음:', error);
+    }
+  };
+
   const fetchCurriculumDetail = async () => {
     if (!id) return;
     
     try {
       setLoading(true);
       setError('');
-      const response = await curriculumAPI.getById(id);
-      console.log('커리큘럼 상세 응답:', response.data);
-      setCurriculum(response.data);
+      
+      const curriculumResponse = await curriculumAPI.getById(id);
+      const curriculumData = curriculumResponse.data;
+      setCurriculum(curriculumData);
+      
+      // 태그와 카테고리 정보 가져오기
+      await fetchTagsAndCategory(id);
+      
     } catch (error: any) {
       console.error('커리큘럼 상세 조회 실패:', error);
       setError('커리큘럼을 불러오는데 실패했습니다.');
@@ -138,6 +174,72 @@ const CurriculumDetail: React.FC = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const handleTagSearch = async (query: string) => {
+    if (query.length < 1) {
+      setTagSuggestions([]);
+      return;
+    }
+
+    try {
+      const response = await tagAPI.searchTags({ q: query, limit: 5 });
+      setTagSuggestions(response.data.suggestions || []);
+    } catch (error) {
+      console.error('태그 검색 실패:', error);
+    }
+  };
+
+  const handleAddTag = async (tagName: string) => {
+    if (!curriculum || !tagName.trim()) return;
+
+    try {
+      setLoadingTags(true);
+      await curriculumTagAPI.addTags(curriculum.id, [tagName.trim()]);
+      
+      toast({
+        title: '태그가 추가되었습니다',
+        status: 'success',
+        duration: 3000,
+      });
+      
+      setNewTag('');
+      setTagSuggestions([]);
+      await fetchTagsAndCategory(curriculum.id);
+    } catch (error: any) {
+      console.error('태그 추가 실패:', error);
+      toast({
+        title: '태그 추가에 실패했습니다',
+        status: 'error',
+        duration: 3000,
+      });
+    } finally {
+      setLoadingTags(false);
+    }
+  };
+
+  // 태그 제거
+  const handleRemoveTag = async (tagName: string) => {
+    if (!curriculum) return;
+
+    try {
+      await curriculumTagAPI.removeTag(curriculum.id, tagName);
+      
+      toast({
+        title: '태그가 제거되었습니다',
+        status: 'success',
+        duration: 3000,
+      });
+      
+      await fetchTagsAndCategory(curriculum.id);
+    } catch (error: any) {
+      console.error('태그 제거 실패:', error);
+      toast({
+        title: '태그 제거에 실패했습니다',
+        status: 'error',
+        duration: 3000,
+      });
     }
   };
 
@@ -434,6 +536,8 @@ const CurriculumDetail: React.FC = () => {
     return Math.floor(getTotalLessons() * 0.3);
   };
 
+  const { isOpen: isTagModalOpen, onOpen: onTagModalOpen, onClose: onTagModalClose } = useDisclosure();
+
   if (loading) {
     return (
       <Container maxW="6xl" py={8}>
@@ -555,6 +659,64 @@ const CurriculumDetail: React.FC = () => {
                   />
                 </VStack>
               </HStack>
+
+              {/* 카테고리와 태그 */}
+
+              <Divider />
+
+              <VStack align="stretch" spacing={3}>
+                {/* 카테고리 */}
+                {category && (
+                  <VStack align="start" spacing={1}>
+                    <Text fontSize="sm" color={secondaryTextColor}>카테고리</Text>
+                    <Badge
+                      style={{ backgroundColor: category.color }}
+                      color="white"
+                      variant="solid"
+                    >
+                      {category.icon && `${category.icon} `}
+                      {category.name}
+                    </Badge>
+                  </VStack>
+                )}
+
+                {/* 태그 */}
+                <VStack align="start" spacing={2}>
+                  <HStack justify="space-between" w="100%">
+                    <Text fontSize="sm" color={secondaryTextColor}>태그</Text>
+                    <Button
+                      size="xs"
+                      leftIcon={<AddIcon />}
+                      colorScheme="green"
+                      variant="outline"
+                      onClick={onTagModalOpen}
+                    >
+                      태그 추가
+                    </Button>
+                  </HStack>
+                  
+                  {tags.length > 0 ? (
+                    <HStack flexWrap="wrap" spacing={2}>
+                      {tags.map((tag) => (
+                        <Badge
+                          key={tag.id}
+                          colorScheme="blue"
+                          variant="outline"
+                          cursor="pointer"
+                          onClick={() => handleRemoveTag(tag.name)}
+                          title="클릭하여 제거"
+                        >
+                          #{tag.name} ×
+                        </Badge>
+                      ))}
+                    </HStack>
+                  ) : (
+                    <Text fontSize="sm" color={secondaryTextColor} fontStyle="italic">
+                      아직 태그가 없습니다
+                    </Text>
+                  )}
+                </VStack>
+              </VStack>
             </VStack>
           </CardBody>
         </Card>
@@ -961,6 +1123,72 @@ const CurriculumDetail: React.FC = () => {
                 onClick={() => editingWeek && handleDeleteWeek(editingWeek)}
               >
                 삭제하기
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* 태그 추가 모달 */}
+        <Modal isOpen={isTagModalOpen} onClose={onTagModalClose}>
+          <ModalOverlay />
+          <ModalContent bg={cardBg} color={textColor}>
+            <ModalHeader>태그 추가</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <VStack spacing={4}>
+                <FormControl>
+                  <FormLabel>태그 이름</FormLabel>
+                  <Input
+                    placeholder="태그를 입력하세요 (예: react, javascript)"
+                    value={newTag}
+                    onChange={(e) => {
+                      setNewTag(e.target.value);
+                      handleTagSearch(e.target.value);
+                    }}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddTag(newTag);
+                      }
+                    }}
+                  />
+                </FormControl>
+                
+                {/* 태그 제안 */}
+                {tagSuggestions.length > 0 && (
+                  <VStack align="stretch" w="100%">
+                    <Text fontSize="sm" color={secondaryTextColor}>추천 태그:</Text>
+                    <HStack flexWrap="wrap">
+                      {tagSuggestions.map((suggestion) => (
+                        <Badge
+                          key={suggestion.id}
+                          colorScheme="blue"
+                          variant="outline"
+                          cursor="pointer"
+                          onClick={() => {
+                            setNewTag(suggestion.name);
+                            setTagSuggestions([]);
+                          }}
+                        >
+                          {suggestion.name} ({suggestion.usage_count})
+                        </Badge>
+                      ))}
+                    </HStack>
+                  </VStack>
+                )}
+              </VStack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onTagModalClose}>
+                취소
+              </Button>
+              <Button
+                colorScheme="green"
+                onClick={() => handleAddTag(newTag)}
+                isLoading={loadingTags}
+                loadingText="추가 중..."
+                isDisabled={!newTag.trim()}
+              >
+                추가하기
               </Button>
             </ModalFooter>
           </ModalContent>

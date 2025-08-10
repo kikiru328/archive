@@ -1,5 +1,6 @@
 // src/pages/Curriculum.tsx
 import React, { useState, useEffect } from 'react';
+
 import {
   Box,
   Button,
@@ -35,7 +36,7 @@ import {
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
-import { curriculumAPI } from '../services/api';
+import { curriculumAPI, categoryAPI, curriculumTagAPI } from '../services/api';
 
 interface WeekSchedule {
   week_number: number;
@@ -53,13 +54,23 @@ interface Curriculum {
   created_at: string;
   updated_at: string;
   week_schedules?: WeekSchedule[];
+  category?: Category;
+  tags?: Array<{ id: string; name: string; usage_count: number }>;
 }
-
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+  icon?: string;
+  is_active: boolean;
+  usage_count: number;
+}
 interface CreateCurriculumForm {
   goal: string;
   period: number;
   difficulty: 'beginner' | 'intermediate' | 'expert';
   details: string;
+  category_id: string;
 }
 
 const Curriculum: React.FC = () => {
@@ -72,9 +83,11 @@ const Curriculum: React.FC = () => {
     goal: '',
     period: 4,
     difficulty: 'beginner',
-    details: ''
+    details: '',
+    category_id: ''
   });
-  
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
@@ -87,7 +100,20 @@ const Curriculum: React.FC = () => {
 
   useEffect(() => {
     fetchMyCurriculums();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await categoryAPI.getActive();
+      setCategories(response.data || []);
+    } catch (error) {
+      console.error('카테고리 조회 실패:', error);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   const fetchMyCurriculums = async () => {
     try {
@@ -96,15 +122,19 @@ const Curriculum: React.FC = () => {
       const response = await curriculumAPI.getAll();
       console.log('커리큘럼 목록 응답:', response.data);
       
-      // 응답 구조 확인 후 적절히 처리
+      let curriculumData = [];
       if (response.data && response.data.curriculums) {
-        setCurriculums(response.data.curriculums);
+        curriculumData = response.data.curriculums;
       } else if (Array.isArray(response.data)) {
-        setCurriculums(response.data);
+        curriculumData = response.data;
       } else {
         console.warn('예상하지 못한 응답 구조:', response.data);
-        setCurriculums([]);
+        curriculumData = [];
       }
+
+      // 각 커리큘럼의 카테고리/태그 정보 로드
+      const curriculumsWithCategories = await loadCurriculumCategories(curriculumData);
+      setCurriculums(curriculumsWithCategories);
     } catch (error: any) {
       console.error('커리큘럼 조회 실패:', error);
       setError('커리큘럼을 불러오는데 실패했습니다.');
@@ -112,6 +142,25 @@ const Curriculum: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadCurriculumCategories = async (curriculums: Curriculum[]) => {
+    const updatedCurriculums = await Promise.all(
+      curriculums.map(async (curriculum) => {
+        try {
+          const response = await curriculumTagAPI.getTagsAndCategory(curriculum.id);
+          return {
+            ...curriculum,
+            category: response.data.category,
+            tags: response.data.tags
+          };
+        } catch (error) {
+          console.log(`커리큘럼 ${curriculum.id}의 태그/카테고리 정보 없음`);
+          return curriculum;
+        }
+      })
+    );
+    return updatedCurriculums;
   };
 
   const handleCreateCurriculum = async () => {
@@ -134,6 +183,16 @@ const Curriculum: React.FC = () => {
       });
       
       console.log('커리큘럼 생성 성공:', response.data);
+
+      if (form.category_id) {
+        try {
+          await curriculumTagAPI.assignCategory(response.data.id, form.category_id);
+          console.log('카테고리 할당 성공');
+        } catch (error) {
+          console.warn('카테고리 할당 실패:', error);
+          // 카테고리 할당 실패해도 커리큘럼 생성은 성공으로 처리
+        }
+      }
       
       toast({
         title: '커리큘럼이 생성되었습니다!',
@@ -145,7 +204,8 @@ const Curriculum: React.FC = () => {
         goal: '',
         period: 4,
         difficulty: 'beginner',
-        details: ''
+        details: '',
+        category_id: ''
       });
       onClose();
       fetchMyCurriculums();
@@ -269,18 +329,60 @@ const Curriculum: React.FC = () => {
               >
                 <CardBody>
                   <VStack align="stretch" spacing={3}>
-                    {/* 제목과 상태 */}
-                    <HStack justify="space-between" align="start">
-                      <Heading size="md" noOfLines={2} color={textColor}>
-                        {curriculum.title}
-                      </Heading>
-                      <Badge
-                        colorScheme={getVisibilityColor(curriculum.visibility)}
-                        variant="solid"
-                      >
-                        {getVisibilityText(curriculum.visibility)}
-                      </Badge>
-                    </HStack>
+                    {/* 헤더와 카테고리 */}
+                    <VStack align="stretch" spacing={2}>
+                      <HStack justify="space-between" align="start">
+                        <Heading size="md" noOfLines={2} color={textColor}>
+                          {curriculum.title}
+                        </Heading>
+                        <Badge
+                          colorScheme={getVisibilityColor(curriculum.visibility)}
+                          variant="solid"
+                        >
+                          {getVisibilityText(curriculum.visibility)}
+                        </Badge>
+                      </HStack>
+
+                      {/* 카테고리 표시 */}
+                      {curriculum.category && (
+                        <HStack>
+                          <Badge
+                            style={{ backgroundColor: curriculum.category.color }}
+                            color="white"
+                            variant="solid"
+                            size="sm"
+                          >
+                            {curriculum.category.icon && `${curriculum.category.icon} `}
+                            {curriculum.category.name}
+                          </Badge>
+                        </HStack>
+                      )}
+
+                      {/* 태그 표시 */}
+                      {curriculum.tags && curriculum.tags.length > 0 && (
+                        <HStack flexWrap="wrap" spacing={1}>
+                          {curriculum.tags.slice(0, 3).map((tag) => (
+                            <Badge
+                              key={tag.id}
+                              colorScheme="gray"
+                              variant="outline"
+                              size="sm"
+                            >
+                              #{tag.name}
+                            </Badge>
+                          ))}
+                          {curriculum.tags.length > 3 && (
+                            <Badge
+                              colorScheme="gray"
+                              variant="outline"
+                              size="sm"
+                            >
+                              +{curriculum.tags.length - 3}
+                            </Badge>
+                          )}
+                        </HStack>
+                      )}
+                    </VStack>
 
                     {/* 통계 */}
                     <HStack spacing={4} fontSize="sm" color={secondaryTextColor}>
@@ -348,7 +450,32 @@ const Curriculum: React.FC = () => {
                     <option value="expert" style={{ backgroundColor: cardBg, color: textColor }}>고급</option>
                   </Select>
                 </FormControl>
-
+                <FormControl>
+                  <FormLabel color={textColor}>카테고리 (선택사항)</FormLabel>
+                  <Select
+                    value={form.category_id}
+                    onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+                    color={textColor}
+                    borderColor={borderColor}
+                    placeholder="카테고리를 선택하세요"
+                  >
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id} style={{ backgroundColor: cardBg, color: textColor }}>
+                        {category.icon && `${category.icon} `}{category.name}
+                      </option>
+                    ))}
+                  </Select>
+                  {loadingCategories && (
+                    <Text fontSize="xs" color={secondaryTextColor} mt={1}>
+                      카테고리 로딩 중...
+                    </Text>
+                  )}
+                  {categories.length === 0 && !loadingCategories && (
+                    <Text fontSize="xs" color={secondaryTextColor} mt={1}>
+                      사용 가능한 카테고리가 없습니다
+                    </Text>
+                  )}
+                </FormControl>
                 <FormControl>
                   <FormLabel color={textColor}>추가 세부사항</FormLabel>
                   <Textarea
