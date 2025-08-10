@@ -1,4 +1,4 @@
-// src/pages/Bookmarks.tsx
+// src/pages/Bookmarks.tsx - 완전히 수정된 버전
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -19,9 +19,9 @@ import {
   Badge,
   IconButton,
 } from '@chakra-ui/react';
-import { FaBookmark, FaEye, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { bookmarkAPI } from '../services/api';
+import { BookmarkIcon, EyeIcon, TrashIcon } from '../components/icons/SimpleIcons';
 
 interface Bookmark {
   id: string;
@@ -140,7 +140,7 @@ const Bookmarks: React.FC = () => {
           <Button
             colorScheme="blue"
             onClick={() => navigate('/feed')}
-            leftIcon={<FaBookmark />}
+            leftIcon={<BookmarkIcon />}
           >
             피드 보기
           </Button>
@@ -158,7 +158,7 @@ const Bookmarks: React.FC = () => {
         {bookmarks.length === 0 && !loading ? (
           <Box textAlign="center" py={10}>
             <Box mb={4} display="flex" justifyContent="center">
-              <FaBookmark size={48} color="gray" />
+              <BookmarkIcon size="48px" color="gray" />
             </Box>
             <Text fontSize="lg" color={secondaryTextColor} mb={4}>
               아직 북마크한 커리큘럼이 없습니다
@@ -187,13 +187,13 @@ const Bookmarks: React.FC = () => {
                       <HStack justify="space-between" w="100%">
                         <Badge colorScheme="blue" variant="solid">
                           <Box as="span" mr={1}>
-                            <FaBookmark />
+                            <BookmarkIcon />
                           </Box>
                           북마크됨
                         </Badge>
                         <IconButton
                           aria-label="북마크 제거"
-                          icon={<FaTrash />}
+                          icon={<TrashIcon />}
                           size="sm"
                           variant="ghost"
                           colorScheme="red"
@@ -225,7 +225,7 @@ const Bookmarks: React.FC = () => {
                     {/* 액션 버튼 */}
                     <HStack justify="space-between">
                       <Button
-                        leftIcon={<FaEye />}
+                        leftIcon={<EyeIcon />}
                         size="sm"
                         variant="outline"
                         colorScheme="blue"

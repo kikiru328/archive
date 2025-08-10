@@ -1,4 +1,4 @@
-// src/components/Header.tsx - 향상된 버전 (소셜 기능 추가)
+// src/components/Header.tsx - 완전히 수정된 버전
 import {
   Box,
   Flex,
@@ -24,17 +24,17 @@ import {
   ChevronDownIcon,
   BellIcon,
 } from '@chakra-ui/icons';
-import { 
-  FaRss, 
-  FaBookmark, 
-  FaUsers, 
-  FaHeart,
-  FaComment,
-  FaCog,
-} from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { followAPI } from '../services/api';
+import { 
+  RssIcon, 
+  BookmarkIcon, 
+  UsersIcon, 
+  HeartIcon,
+  CommentIcon,
+  CogIcon 
+} from '../components/icons/SimpleIcons';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -139,7 +139,7 @@ const Header = () => {
               variant="ghost"
               bg={isActivePage('/feed') ? 'whiteAlpha.300' : 'transparent'}
               _hover={{ bg: 'whiteAlpha.200' }}
-              leftIcon={<FaRss />}
+              leftIcon={<RssIcon />}
               color={textColor}
             >
               피드
@@ -188,33 +188,33 @@ const Header = () => {
               </MenuButton>
               <MenuList color="black">
                 <MenuItem 
-                  icon={<FaUsers />}
+                  icon={<UsersIcon />}
                   onClick={() => navigate('/social/profile')}
                 >
                   내 프로필
                 </MenuItem>
                 <MenuItem 
-                  icon={<FaBookmark />}
+                  icon={<BookmarkIcon />}
                   onClick={() => navigate('/bookmarks')}
                 >
                   북마크
                   {/* TODO: 북마크 수 표시 */}
                 </MenuItem>
                 <MenuItem 
-                  icon={<FaHeart />}
+                  icon={<HeartIcon />}
                   onClick={() => navigate('/social/liked')}
                 >
                   좋아요한 글
                 </MenuItem>
                 <MenuItem 
-                  icon={<FaComment />}
+                  icon={<CommentIcon />}
                   onClick={() => navigate('/social/comments')}
                 >
                   내 댓글
                 </MenuItem>
                 <MenuDivider />
                 <MenuItem 
-                  icon={<FaCog />}
+                  icon={<CogIcon />}
                   onClick={() => navigate('/settings')}
                 >
                   설정
@@ -243,7 +243,7 @@ const Header = () => {
               onClick={() => navigate('/feed')} 
               variant="ghost"
               _hover={{ bg: 'whiteAlpha.200' }}
-              leftIcon={<FaRss />}
+              leftIcon={<RssIcon />}
               color={textColor}
             >
               피드 구경하기

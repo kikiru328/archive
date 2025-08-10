@@ -1,4 +1,4 @@
-// src/components/social/SocialButtons.tsx
+// src/components/social/SocialButtons.tsx - 완전히 수정된 버전
 import React, { useState, useEffect } from 'react';
 import {
   HStack,
@@ -9,15 +9,15 @@ import {
   Tooltip,
   Badge,
 } from '@chakra-ui/react';
-import { 
-  FaHeart, 
-  FaRegHeart, 
-  FaComment, 
-  FaBookmark, 
-  FaRegBookmark,
-  FaShareAlt,
-} from 'react-icons/fa';
 import { likeAPI, bookmarkAPI, socialStatsAPI } from '../../services/api';
+import { 
+  HeartIcon, 
+  HeartOutlineIcon, 
+  CommentIcon, 
+  BookmarkIcon, 
+  BookmarkOutlineIcon,
+  ShareIcon,
+} from '../icons/SimpleIcons';
 
 interface SocialButtonsProps {
   curriculumId: string;
@@ -184,7 +184,7 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
         <Tooltip label={stats.is_liked_by_user ? '좋아요 취소' : '좋아요'}>
           <IconButton
             aria-label="좋아요"
-            icon={stats.is_liked_by_user ? <FaHeart /> : <FaRegHeart />}
+            icon={stats.is_liked_by_user ? <HeartIcon /> : <HeartOutlineIcon />}
             color={stats.is_liked_by_user ? activeColor : iconColor}
             variant="ghost"
             size={size}
@@ -209,7 +209,7 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
         <Tooltip label="댓글">
           <IconButton
             aria-label="댓글"
-            icon={<FaComment />}
+            icon={<CommentIcon />}
             color={iconColor}
             variant="ghost"
             size={size}
@@ -232,7 +232,7 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
       <Tooltip label={stats.is_bookmarked_by_user ? '북마크 해제' : '북마크'}>
         <IconButton
           aria-label="북마크"
-          icon={stats.is_bookmarked_by_user ? <FaBookmark /> : <FaRegBookmark />}
+          icon={stats.is_bookmarked_by_user ? <BookmarkIcon /> : <BookmarkOutlineIcon />}
           color={stats.is_bookmarked_by_user ? bookmarkColor : iconColor}
           variant="ghost"
           size={size}
@@ -250,7 +250,7 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
       <Tooltip label="공유">
         <IconButton
           aria-label="공유"
-          icon={<FaShareAlt />}
+          icon={<ShareIcon />}
           color={iconColor}
           variant="ghost"
           size={size}

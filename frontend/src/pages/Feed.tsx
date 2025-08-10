@@ -1,4 +1,4 @@
-// src/pages/Feed.tsx
+// src/pages/Feed.tsx - 완전히 수정된 버전
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -34,18 +34,15 @@ import {
   FormControl,
   FormLabel,
 } from '@chakra-ui/react';
-import { 
-  FaSearch, 
-  FaFilter, 
-  FaSync,
-  FaEye,
-  FaHeart,
-  FaComment,
-  FaBookmark,
-} from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { feedAPI, categoryAPI, commentAPI } from '../services/api';
 import SocialButtons from '../components/social/SocialButtons';
+import { 
+  SearchIcon, 
+  FilterIcon, 
+  SyncIcon,
+  EyeIcon,
+} from '../components/icons/SimpleIcons';
 
 interface FeedItem {
   curriculum_id: string;
@@ -101,12 +98,20 @@ const Feed: React.FC = () => {
 
   useEffect(() => {
     fetchCategories();
-    fetchFeed();
-  }, []);
+    fetchFeed(true); // 처음에는 reset=true로 호출
+  }, []); // 의존성 배열을 비워서 한 번만 실행
 
   useEffect(() => {
-    fetchFeed();
-  }, [page, selectedCategory, searchQuery, selectedTags]);
+    if (page > 1) {
+      // page가 1보다 클 때만 추가 로드
+      fetchFeed(false);
+    }
+  }, [page]);
+
+  useEffect(() => {
+    // 필터가 변경될 때만 리셋해서 다시 로드
+    fetchFeed(true);
+  }, [selectedCategory, searchQuery, selectedTags]);
 
   const fetchCategories = async () => {
     try {
@@ -132,13 +137,32 @@ const Feed: React.FC = () => {
         ...(selectedTags && { tags: selectedTags }),
       };
 
+      console.log('피드 요청 파라미터:', params);
       const response = await feedAPI.getPublicFeed(params);
       const newItems = response.data.items || [];
+      
+      console.log('피드 응답:', {
+        totalCount: response.data.total_count,
+        hasNext: response.data.has_next,
+        itemsCount: newItems.length,
+        items: newItems.map((item: FeedItem) => ({ id: item.curriculum_id, title: item.title }))
+      });
 
       if (reset) {
         setFeedItems(newItems);
+        setPage(1); // 페이지를 1로 리셋
       } else {
-        setFeedItems(prev => [...prev, ...newItems]);
+        // 중복 제거: 이미 존재하는 커리큘럼 ID는 추가하지 않음
+        const existingIds = new Set(feedItems.map((item: FeedItem) => item.curriculum_id));
+        const uniqueNewItems = newItems.filter((item: FeedItem) => !existingIds.has(item.curriculum_id));
+        
+        console.log('기존 아이템 수:', feedItems.length);
+        console.log('새 아이템 수:', newItems.length);
+        console.log('중복 제거 후 새 아이템:', uniqueNewItems.length);
+        
+        if (uniqueNewItems.length > 0) {
+          setFeedItems(prev => [...prev, ...uniqueNewItems]);
+        }
       }
 
       setTotalCount(response.data.total_count);
@@ -227,7 +251,7 @@ const Feed: React.FC = () => {
           </VStack>
           <IconButton
             aria-label="새로고침"
-            icon={<FaSync />}
+            icon={<SyncIcon />}
             colorScheme="blue"
             variant="outline"
             isLoading={refreshing}
@@ -249,13 +273,13 @@ const Feed: React.FC = () => {
                   />
                   <IconButton
                     aria-label="검색"
-                    icon={<FaSearch />}
+                    icon={<SearchIcon />}
                     colorScheme="blue"
                     onClick={handleSearch}
                   />
                 </HStack>
                 <Button
-                  leftIcon={<FaFilter />}
+                  leftIcon={<FilterIcon />}
                   variant="outline"
                   onClick={handleFilterChange}
                 >
@@ -295,8 +319,8 @@ const Feed: React.FC = () => {
 
         {/* 피드 아이템들 */}
         <VStack spacing={4} align="stretch">
-          {feedItems.map((item) => (
-            <Card key={item.curriculum_id} bg={cardBg} borderColor={borderColor}
+          {feedItems.map((item: FeedItem, index: number) => (
+            <Card key={`${item.curriculum_id}-${index}`} bg={cardBg} borderColor={borderColor}
                   _hover={{ shadow: 'md', transform: 'translateY(-1px)' }}
                   transition="all 0.2s"
             >
@@ -342,7 +366,7 @@ const Feed: React.FC = () => {
                     <Text>{item.total_weeks}주차</Text>
                     <Text>{item.total_lessons}개 레슨</Text>
                     <Button
-                      leftIcon={<FaEye />}
+                      leftIcon={<EyeIcon />}
                       size="xs"
                       variant="ghost"
                       onClick={() => navigate(`/curriculum/${item.curriculum_id}`)}
