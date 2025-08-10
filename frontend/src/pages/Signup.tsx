@@ -1,3 +1,4 @@
+// src/pages/Signup.tsx
 import {
   Box,
   Button,
@@ -10,6 +11,7 @@ import {
   Alert,
   AlertIcon,
   AlertDescription,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -23,6 +25,11 @@ const Signup = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+
+  // 다크모드 대응 색상
+  const bgColor = useColorModeValue('white', 'gray.700');
+  const textColor = useColorModeValue('gray.900', 'white');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
 
   const translateErrorMessage = (errorMessage: string): string => {
     // 완전한 메시지 매칭
@@ -143,9 +150,9 @@ const Signup = () => {
 
   return (
     <Container maxW="md" centerContent>
-      <Box mt={20} p={8} borderWidth={1} borderRadius="lg" w="100%">
+      <Box mt={20} p={8} borderWidth={1} borderRadius="lg" w="100%" bg={bgColor} borderColor={borderColor}>
         <VStack gap={4}>
-          <Heading>LLearn 회원가입</Heading>
+          <Heading color={textColor}>LLearn 회원가입</Heading>
           
           {/* 에러 메시지 */}
           {error && (
@@ -164,34 +171,40 @@ const Signup = () => {
           )}
           
           <Box w="100%">
-            <Text mb={2}>이름</Text>
+            <Text mb={2} color={textColor}>이름</Text>
             <Input
               placeholder="2-32자 한글/영문/숫자"
               value={name}
               onChange={(e) => setName(e.target.value)}
               isInvalid={!!error && error.includes('name')}
+              color={textColor}
+              borderColor={borderColor}
             />
           </Box>
 
           <Box w="100%">
-            <Text mb={2}>이메일</Text>
+            <Text mb={2} color={textColor}>이메일</Text>
             <Input
               type="email"
               placeholder="example@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               isInvalid={!!error && error.includes('email')}
+              color={textColor}
+              borderColor={borderColor}
             />
           </Box>
 
           <Box w="100%">
-            <Text mb={2}>비밀번호</Text>
+            <Text mb={2} color={textColor}>비밀번호</Text>
             <Input
               type="password"
               placeholder="8-64자, 대소문자/숫자/특수문자 포함"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               isInvalid={!!error && error.includes('password')}
+              color={textColor}
+              borderColor={borderColor}
             />
           </Box>
 
@@ -205,7 +218,7 @@ const Signup = () => {
             회원가입
           </Button>
 
-          <Text fontSize="sm">
+          <Text fontSize="sm" color={textColor}>
             이미 계정이 있으신가요?{' '}
             <Link color="blue.500" onClick={() => navigate('/login')}>
               로그인하기
