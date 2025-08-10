@@ -41,7 +41,7 @@ import {
   CheckIcon
 } from '@chakra-ui/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { summaryAPI, curriculumAPI } from '../services/api';
+import { summaryAPI, curriculumAPI, feedbackAPI } from '../services/api';
 
 interface SummaryDetail {
   id: string;
@@ -51,13 +51,15 @@ interface SummaryDetail {
   content: string;
   created_at: string;
   updated_at: string;
-  feedback?: {
-    id: string;
-    content: string;
-    rating: number;
-    suggestions: string[];
-    created_at: string;
-  };
+}
+
+interface Feedback {
+  id: string;
+  summary_id: string;
+  comment: string;
+  score: number;
+  grade: string;
+  created_at: string;
 }
 
 interface Curriculum {
@@ -81,6 +83,8 @@ const SummaryDetail: React.FC = () => {
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
   const [editContent, setEditContent] = useState('');
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
   
   const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure();
   
@@ -112,6 +116,8 @@ const SummaryDetail: React.FC = () => {
       const curriculumResponse = await curriculumAPI.getById(summaryData.curriculum_id);
       setCurriculum(curriculumResponse.data);
       
+      await fetchFeedback(summaryData.id);
+
     } catch (error: any) {
       console.error('요약 상세 조회 실패:', error);
       setError('요약을 불러오는데 실패했습니다.');
@@ -128,7 +134,7 @@ const SummaryDetail: React.FC = () => {
       setLoading(false);
     }
   };
-
+  
   const handleEditSummary = () => {
     if (summary) {
       setEditContent(summary.content);
@@ -171,7 +177,7 @@ const SummaryDetail: React.FC = () => {
       setUpdating(false);
     }
   };
-
+  
   const handleDeleteSummary = async () => {
     if (!summary) return;
     
@@ -196,6 +202,49 @@ const SummaryDetail: React.FC = () => {
         status: 'error',
         duration: 3000,
       });
+    }
+  };
+
+  const handleRequestFeedback = async () => {
+    if (!summary) return;
+
+    try {
+      setLoadingFeedback(true);
+      
+      await feedbackAPI.generateFeedback(summary.id);
+      
+      toast({
+        title: '피드백 생성을 요청했습니다',
+        description: '잠시 후 피드백이 생성됩니다',
+        status: 'success',
+        duration: 3000,
+      });
+      
+      // 3초 후 피드백 다시 로드
+      setTimeout(async () => {
+        await fetchFeedback(summary.id);
+        setLoadingFeedback(false);
+      }, 3000);
+      
+    } catch (error: any) {
+      console.error('피드백 요청 실패:', error);
+      toast({
+        title: '피드백 요청에 실패했습니다',
+        status: 'error',
+        duration: 3000,
+      });
+      setLoadingFeedback(false);
+    }
+  };
+
+  const fetchFeedback = async (summaryId: string) => {
+    try {
+      const response = await feedbackAPI.getBySummary(summaryId);
+      setFeedback(response.data);
+    } catch (error: any) {
+      // 피드백이 없는 경우는 정상적인 상황
+      console.log('피드백 없음:', error);
+      setFeedback(null);
     }
   };
 
@@ -365,44 +414,32 @@ const SummaryDetail: React.FC = () => {
         </Card>
 
         {/* AI 피드백 섹션 */}
-        {summary.feedback ? (
+        {feedback ? (
           <Card bg={cardBg} borderColor={borderColor}>
             <CardBody>
               <VStack align="stretch" spacing={4}>
                 <HStack justify="space-between">
                   <Heading size="md" color={textColor}>AI 피드백</Heading>
                   <HStack>
-                    {renderStars(summary.feedback.rating)}
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <StarIcon
+                        key={i}
+                        color={i < Math.floor(feedback.score) ? 'yellow.400' : 'gray.300'}
+                        boxSize={4}
+                      />
+                    ))}
                     <Text fontSize="sm" color={secondaryTextColor}>
-                      ({summary.feedback.rating}/5)
+                      ({feedback.score}/10)
                     </Text>
                   </HStack>
                 </HStack>
                 
                 <Text color={textColor} lineHeight="1.6">
-                  {summary.feedback.content}
+                  {feedback.comment}
                 </Text>
                 
-                {summary.feedback.suggestions.length > 0 && (
-                  <Box>
-                    <Text fontWeight="semibold" color={textColor} mb={2}>
-                      개선 제안:
-                    </Text>
-                    <VStack align="stretch" spacing={2}>
-                      {summary.feedback.suggestions.map((suggestion, index) => (
-                        <HStack key={index} align="start">
-                          <CheckIcon color="green.500" mt={1} />
-                          <Text color={textColor} fontSize="sm">
-                            {suggestion}
-                          </Text>
-                        </HStack>
-                      ))}
-                    </VStack>
-                  </Box>
-                )}
-                
                 <Text fontSize="xs" color={secondaryTextColor}>
-                  피드백 생성일: {formatDate(summary.feedback.created_at)}
+                  피드백 생성일: {formatDate(feedback.created_at)}
                 </Text>
               </VStack>
             </CardBody>
@@ -419,14 +456,9 @@ const SummaryDetail: React.FC = () => {
                 <Button
                   colorScheme="blue"
                   variant="outline"
-                  onClick={() => {
-                    // TODO: AI 피드백 요청 기능
-                    toast({
-                      title: 'AI 피드백 기능은 준비 중입니다',
-                      status: 'info',
-                      duration: 3000,
-                    });
-                  }}
+                  onClick={handleRequestFeedback}
+                  isLoading={loadingFeedback}
+                  loadingText="요청 중..."
                 >
                   피드백 요청하기
                 </Button>

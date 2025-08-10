@@ -39,10 +39,13 @@ import {
   EditIcon, 
   DeleteIcon,
   // ViewIcon,
-  StarIcon
+  StarIcon,
+  CheckIcon,
+  TimeIcon,
+  ChatIcon,
 } from '@chakra-ui/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { summaryAPI, curriculumAPI } from '../services/api';
+import { summaryAPI, curriculumAPI, feedbackAPI } from '../services/api';
 
 interface Summary {
   id: string;
@@ -73,6 +76,14 @@ interface SummaryForm {
   week_number: number;
   content: string;
 }
+interface Feedback {
+  id: string;
+  summary_id: string;
+  comment: string;
+  score: number;
+  grade: string;
+  created_at: string;
+}
 
 const Summary: React.FC = () => {
   const navigate = useNavigate();
@@ -92,6 +103,8 @@ const Summary: React.FC = () => {
     content: ''
   });
   const [currentView, setCurrentView] = useState<'create' | 'list'>('list');
+  const [feedbacks, setFeedbacks] = useState<Record<string, Feedback>>({});
+  const [loadingFeedbacks, setLoadingFeedbacks] = useState<Record<string, boolean>>({});
   
   const { isOpen: isCreateModalOpen, onOpen: onCreateModalOpen, onClose: onCreateModalClose } = useDisclosure();
   const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure();
@@ -135,7 +148,6 @@ const Summary: React.FC = () => {
       setLoading(true);
       setError('');
       
-      // 내 커리큘럼 목록과 요약 목록을 병렬로 가져오기
       const [curriculumResponse, summaryResponse] = await Promise.all([
         curriculumAPI.getAll(),
         summaryAPI.getAll()
@@ -149,6 +161,8 @@ const Summary: React.FC = () => {
 
       const summaryData = summaryResponse.data.summaries || [];
       setSummaries(summaryData);
+
+      await loadFeedbacksForSummaries(summaryData);
     } catch (error: any) {
       console.error('데이터 조회 실패:', error);
       setError('데이터를 불러오는데 실패했습니다.');
@@ -317,6 +331,79 @@ const Summary: React.FC = () => {
     const curriculum = curriculums.find(c => c.id === curriculumId);
     return curriculum?.title || '알 수 없는 커리큘럼';
   };
+
+  // 피드백 로드 함수
+  const loadFeedbacksForSummaries = async (summaryList: Summary[]) => {
+    const feedbackPromises = summaryList.map(async (summary) => {
+      try {
+        const response = await feedbackAPI.getBySummary(summary.id);
+        return { summaryId: summary.id, feedback: response.data };
+      } catch (error) {
+        return { summaryId: summary.id, feedback: null };
+      }
+    });
+
+    const results = await Promise.all(feedbackPromises);
+    const feedbackMap: Record<string, Feedback> = {};
+    
+    results.forEach(({ summaryId, feedback }) => {
+      if (feedback) {
+        feedbackMap[summaryId] = feedback;
+      }
+    });
+    
+    setFeedbacks(feedbackMap);
+  };
+
+  // 피드백 요청 함수
+  const handleRequestFeedback = async (summaryId: string) => {
+    try {
+      setLoadingFeedbacks(prev => ({ ...prev, [summaryId]: true }));
+      
+      await feedbackAPI.generateFeedback(summaryId);
+      
+      toast({
+        title: '피드백 생성을 요청했습니다',
+        description: '잠시 후 피드백이 생성됩니다',
+        status: 'success',
+        duration: 3000,
+      });
+      
+      // 피드백 생성 후 다시 로드
+      setTimeout(async () => {
+        try {
+          const response = await feedbackAPI.getBySummary(summaryId);
+          setFeedbacks(prev => ({ ...prev, [summaryId]: response.data }));
+        } catch (error) {
+          // 아직 생성 중일 수 있음
+        }
+        setLoadingFeedbacks(prev => ({ ...prev, [summaryId]: false }));
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error('피드백 요청 실패:', error);
+      toast({
+        title: '피드백 요청에 실패했습니다',
+        status: 'error',
+        duration: 3000,
+      });
+      setLoadingFeedbacks(prev => ({ ...prev, [summaryId]: false }));
+    }
+  };
+
+  // 피드백 상태 확인 함수
+  const getFeedbackStatus = (summaryId: string) => {
+    if (loadingFeedbacks[summaryId]) {
+      return { status: 'loading', label: '생성 중...', color: 'yellow' };
+    }
+    
+    if (feedbacks[summaryId]) {
+      return { status: 'completed', label: '피드백 완료', color: 'green' };
+    }
+    
+    return { status: 'none', label: '피드백 요청', color: 'gray' };
+  };
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR', {
@@ -517,11 +604,26 @@ const Summary: React.FC = () => {
                       <Heading size="sm" color={textColor} noOfLines={1}>
                         {getWeekTitle(summary.curriculum_id, summary.week_number)}
                       </Heading>
-                      <Badge colorScheme="blue" variant="subtle" size="sm">
-                        {summary.week_number}주차
-                      </Badge>
+                      <HStack>
+                        <Badge colorScheme="blue" variant="subtle" size="sm">
+                          {summary.week_number}주차
+                        </Badge>
+                        {(() => {
+                          const feedbackStatus = getFeedbackStatus(summary.id);
+                          return (
+                            <Badge 
+                              colorScheme={feedbackStatus.color} 
+                              variant={feedbackStatus.status === 'completed' ? 'solid' : 'outline'}
+                              size="sm"
+                            >
+                              {feedbackStatus.status === 'loading' && <TimeIcon mr={1} />}
+                              {feedbackStatus.status === 'completed' && <CheckIcon mr={1} />}
+                              {feedbackStatus.label}
+                            </Badge>
+                          );
+                        })()}
+                      </HStack>
                     </VStack>
-
                     {/* 요약 내용 미리보기 */}
                     <Text 
                       color={secondaryTextColor} 
@@ -540,6 +642,20 @@ const Summary: React.FC = () => {
 
                     {/* 액션 버튼 */}
                     <HStack spacing={2} justify="flex-end">
+                      {getFeedbackStatus(summary.id).status === 'none' && (
+                        <Button
+                          leftIcon={<ChatIcon />}
+                          size="sm"
+                          variant="ghost"
+                          colorScheme="green"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRequestFeedback(summary.id);
+                          }}
+                        >
+                          피드백 요청
+                        </Button>
+                      )}
                       <Button
                         leftIcon={<EditIcon />}
                         size="sm"
