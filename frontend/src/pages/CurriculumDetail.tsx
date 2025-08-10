@@ -129,7 +129,7 @@ const CurriculumDetail: React.FC = () => {
   const { isOpen: isWeekModalOpen, onOpen: onWeekModalOpen, onClose: onWeekModalClose } = useDisclosure();
   const { isOpen: isEditLessonModalOpen, onOpen: onEditLessonModalOpen, onClose: onEditLessonModalClose } = useDisclosure();
   const { isOpen: isDeleteWeekModalOpen, onOpen: onDeleteWeekModalOpen, onClose: onDeleteWeekModalClose } = useDisclosure();
-  const { isOpen: isTagModalOpen, onOpen: onTagModalOpen, onClose: onTagModalClose } = useDisclosure();
+  // const { isOpen: isTagModalOpen, onOpen: onTagModalOpen, onClose: onTagModalClose } = useDisclosure();
 
   // 다크모드 대응 색상
   const bgColor = useColorModeValue('white', 'gray.800');

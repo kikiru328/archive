@@ -158,7 +158,7 @@ const Bookmarks: React.FC = () => {
         {bookmarks.length === 0 && !loading ? (
           <Box textAlign="center" py={10}>
             <Box mb={4} display="flex" justifyContent="center">
-              <BookmarkIcon size="48px" color="gray" />
+              <BookmarkIcon size="48px" />
             </Box>
             <Text fontSize="lg" color={secondaryTextColor} mb={4}>
               아직 북마크한 커리큘럼이 없습니다
