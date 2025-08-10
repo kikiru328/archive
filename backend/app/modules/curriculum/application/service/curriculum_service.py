@@ -38,6 +38,7 @@ from app.modules.user.domain.vo.role import RoleVO
 from app.modules.social.domain.repository.follow_repo import IFollowRepository
 from app.common.monitoring.metrics import increment_curriculum_creation
 from app.common.llm.decorators import trace_llm_operation
+import json, re, logging
 
 
 class CurriculumService:
@@ -98,6 +99,13 @@ class CurriculumService:
                     or item.get("week")  # type: ignore
                 )
 
+                # 주차 제목(여러 키 형태 지원)
+                week_title_raw = (
+                    item.get("title")  # type: ignore
+                    or item.get("week_title")  # type: ignore
+                    or None
+                )
+
                 # 레슨 리스트 추출 (여러 키 형태 지원)
                 lessons_raw = (  # type: ignore
                     item.get("lessons")  # type: ignore
@@ -119,8 +127,28 @@ class CurriculumService:
                 # 빈 레슨 제거 및 문자열 변환
                 lessons: list[str] = [str(lesson).strip() for lesson in lessons_raw if str(lesson).strip()]  # type: ignore
 
-                if lessons:  # 유효한 레슨이 있는 경우만 추가
-                    week_schedules.append((week_num, lessons))  # type: ignore
+                if lessons:
+                    # 1) LLM이 접두사를 붙였으면 제거: "1주차: ", "3 주차 -", 등
+                    def _strip_prefix(s: str, n: int) -> str:
+                        import re
+
+                        s = s.strip()
+                        # 숫자/주차/구분자(:：- ) 제거
+                        s = re.sub(rf"^\s*{n}\s*주차\s*[:：\-]?\s*", "", s)
+                        return s.strip()
+
+                    # 2) 없거나 너무 짧으면 첫 레슨으로 보정
+                    def _fallback_title(n: int, ls: list[str]) -> str:
+                        return ls[0][:50] if ls else str(goal)[:50]
+
+                    week_title = str(week_title_raw).strip() if week_title_raw else ""
+                    if week_title:
+                        week_title = _strip_prefix(week_title, week_num)
+                    if not week_title:
+                        week_title = _fallback_title(week_num, lessons)
+
+                    # (week, title, lessons)
+                    week_schedules.append((week_num, week_title, lessons))  # type: ignore
 
             # 최소 1개 주차는 있어야 함
             if not week_schedules:
@@ -335,6 +363,7 @@ class CurriculumService:
             curriculum=curriculum,
             new_week_number=command.week_number,
             lessons_data=command.lessons,
+            new_week_title=command.title,
         )
 
         await self.curriculum_repo.update(updated_curriculum)
@@ -411,6 +440,7 @@ class CurriculumService:
 
         updated_week_schedule = WeekSchedule(
             week_number=target_week,
+            title=week_schedule.title,
             lessons=Lessons(lessons_list),
         )
 

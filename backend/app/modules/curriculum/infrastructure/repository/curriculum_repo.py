@@ -32,10 +32,14 @@ class CurriculumRepository(ICurriculumRepository):
             title=Title(curriculum_model.title),
             week_schedules=[
                 WeekSchedule(
-                    week_number=WeekNumber(week_schedule.week_number),
-                    lessons=Lessons(week_schedule.lessons),
+                    week_number=WeekNumber(ws.week_number),
+                    title=Title(ws.title),
+                    lessons=Lessons(ws.lessons),
                 )
-                for week_schedule in curriculum_model.week_schedules
+                for ws in sorted(
+                    curriculum_model.week_schedules,
+                    key=lambda w: w.week_number,
+                )
             ],
             visibility=Visibility(curriculum_model.visibility),
             created_at=curriculum_model.created_at,
@@ -56,6 +60,7 @@ class CurriculumRepository(ICurriculumRepository):
             new_curriculum.week_schedules.append(
                 WeekScheduleModel(  # type: ignore
                     week_number=week_schedule.week_number.value,
+                    title=week_schedule.title.value,
                     lessons=week_schedule.lessons.items,
                 )
             )
@@ -163,6 +168,7 @@ class CurriculumRepository(ICurriculumRepository):
             existing_curriculum.week_schedules.append(
                 WeekScheduleModel(  # type: ignore
                     week_number=week_schedule.week_number.value,
+                    title=week_schedule.title.value,
                     lessons=week_schedule.lessons.items,
                 )
             )

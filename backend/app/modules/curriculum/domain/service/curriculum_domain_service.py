@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, Sequence, Tuple, TypeAlias
 
 from app.modules.curriculum.domain.entity.curriculum import Curriculum
 from app.modules.curriculum.domain.entity.week_schedule import WeekSchedule
@@ -8,18 +8,33 @@ from app.modules.curriculum.domain.repository.curriculum_repo import (
 )
 from app.modules.curriculum.domain.vo import Title, Visibility, Lessons, WeekNumber
 
+WeekData: TypeAlias = Tuple[int, List[str]] | Tuple[int, Optional[str], List[str]]
+
 
 class CurriculumDomainService:
 
     def __init__(self, curriculum_repo: ICurriculumRepository) -> None:
         self.curriculum_repo: ICurriculumRepository = curriculum_repo
 
+    # 기본 제목 생성
+    def _default_title(
+        self, n: int, lessons: list[str] | None = None, goal: str | None = None
+    ) -> str:
+        # 접두사 없이 "핵심 요약"만 — 우선 첫 레슨, 없으면 goal 일부
+        if lessons and len(lessons) > 0:
+            return str(lessons[0])[:50]
+        return (goal or f"Week {n}")[:50]
+
+    # 기본 제목일 때만 자동 리네이밍
+    def _shift_title_if_default(self, title: str, old_n: int, new_n: int) -> str:
+        return title
+
     async def create_curriculum(
         self,
         curriculum_id: str,
         owner_id: str,
         title: str,
-        week_schedules_data: List[tuple[int, List[str]]],
+        week_schedules_data: Sequence[WeekData],
         visibility: Visibility = Visibility.PRIVATE,
         created_at: Optional[datetime] = None,
     ) -> Curriculum:
@@ -27,11 +42,22 @@ class CurriculumDomainService:
         now = created_at or datetime.now(timezone.utc)
 
         week_schedules: list[WeekSchedule] = []
-        for week_num, lessons_data in week_schedules_data:
-            week_number = WeekNumber(week_num)
-            lessons = Lessons(lessons_data)
+        for item in week_schedules_data:
+            # (week_num, lessons) 또는 (week_num, title|None, lessons)
+            if len(item) == 2:
+                week_num, lessons_data = item  # type: ignore[misc]
+                title_raw = self._default_title(week_num, lessons=list(lessons_data))
+            else:
+                week_num, title_opt, lessons_data = item  # type: ignore[misc]
+                title_raw = title_opt or self._default_title(
+                    week_num, lessons=list(lessons_data)
+                )
+
+            week_number = WeekNumber(int(week_num))
+            lessons = Lessons(list(lessons_data))
             week_schedule = WeekSchedule(
                 week_number=week_number,
+                title=Title(title_raw),
                 lessons=lessons,
             )
             week_schedules.append(week_schedule)
@@ -51,11 +77,18 @@ class CurriculumDomainService:
         curriculum: Curriculum,
         new_week_number: int,
         lessons_data: List[str],
+        new_week_title: Optional[str] = None,
     ) -> Curriculum:
         """새 주차 삽입 및 기존 주차들 뒤로 밀기"""
         new_week = WeekNumber(new_week_number)
         new_lessons = Lessons(lessons_data)
-        new_week_schedule = WeekSchedule(week_number=new_week, lessons=new_lessons)
+        # 새 주차 제목: 주어지지 않으면 기본 제목
+        new_title = Title(
+            new_week_title or self._default_title(new_week_number, lessons=lessons_data)
+        )
+        new_week_schedule = WeekSchedule(
+            week_number=new_week, title=new_title, lessons=new_lessons
+        )
 
         # 새 주차 이후의 모든 주차를 1씩 증가
         updated_week_schedules: list[WeekSchedule] = []
@@ -70,16 +103,23 @@ class CurriculumDomainService:
                 # 기존 주차는 번호를 1 증가시켜 추가
                 if week_schedule.week_number.value < WeekNumber.MAX_WEEK:
                     shifted_week = WeekNumber(week_schedule.week_number.value + 1)
+                    # 제목은 그대로 유지
+                    shifted_title = week_schedule.title
                     shifted_week_schedule = WeekSchedule(
-                        week_number=shifted_week, lessons=week_schedule.lessons
+                        week_number=shifted_week,
+                        title=shifted_title,
+                        lessons=week_schedule.lessons,
                     )
                     updated_week_schedules.append(shifted_week_schedule)
             elif week_schedule.week_number.value >= new_week_number:
                 # 이후 주차들 번호 증가
                 if week_schedule.week_number.value < WeekNumber.MAX_WEEK:
                     shifted_week = WeekNumber(week_schedule.week_number.value + 1)
+                    shifted_title = week_schedule.title
                     shifted_week_schedule = WeekSchedule(
-                        week_number=shifted_week, lessons=week_schedule.lessons
+                        week_number=shifted_week,
+                        title=shifted_title,
+                        lessons=week_schedule.lessons,
                     )
                     updated_week_schedules.append(shifted_week_schedule)
             else:
@@ -122,8 +162,11 @@ class CurriculumDomainService:
             elif week_schedule.week_number.value > target_week_number:
                 # 이후 주차들은 번호를 1 감소
                 shifted_week = WeekNumber(week_schedule.week_number.value - 1)
+                shifted_title = week_schedule.title
                 shifted_week_schedule = WeekSchedule(
-                    week_number=shifted_week, lessons=week_schedule.lessons
+                    week_number=shifted_week,
+                    title=shifted_title,
+                    lessons=week_schedule.lessons,
                 )
                 updated_week_schedules.append(shifted_week_schedule)
             else:

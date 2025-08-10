@@ -33,7 +33,7 @@ class WeekScheduleModel(Base):
         Integer,
         nullable=False,
     )
-
+    title: Mapped[str] = mapped_column(String(50), nullable=False)
     # 세부 커리큘럼 항목: Lessons VO의 리스트를 JSON으로 저장
     lessons: Mapped[list[str]] = mapped_column(
         JSON,

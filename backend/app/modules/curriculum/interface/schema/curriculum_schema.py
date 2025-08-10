@@ -17,7 +17,10 @@ from app.modules.curriculum.domain.vo.visibility import Visibility as Visibility
 
 class WeekScheduleRequest(BaseModel):
     week_number: int = Field(ge=1, description="주차 번호")
-    lessons: List[str] = Field(min_length=1, description="해당 주차 수업 목록")  # type: ignore
+    title: Optional[str] = Field(
+        None, min_length=2, max_length=50, description="주차 제목(없으면 'Week {n}')"
+    )
+    lessons: List[str] = Field(min_length=1, description="해당 주차 수업 목록")  # type: ignoree
 
 
 class CreateCurriculumRequest(BaseModel):
@@ -28,10 +31,13 @@ class CreateCurriculumRequest(BaseModel):
     visibility: VisibilityEnum = Field(VisibilityEnum.PRIVATE, description="공개 여부")
 
     def to_dto(self, owner_id: str) -> CreateCurriculumCommand:
-        schedules = [
-            (week_schedule.week_number, week_schedule.lessons)
-            for week_schedule in self.week_schedules
-        ]
+        # title이 있으면 (week, title, lessons), 없으면 (week, lessons)
+        schedules = []
+        for ws in self.week_schedules:
+            if ws.title:
+                schedules.append((ws.week_number, ws.title, ws.lessons))
+            else:
+                schedules.append((ws.week_number, ws.lessons))
         return CreateCurriculumCommand(
             owner_id=owner_id,
             title=self.title,
@@ -58,6 +64,10 @@ class UpdateCurriculumRequest(BaseModel):
 class CreateWeekScheduleRequest(BaseModel):
     week_number: int = Field(ge=1, description="추가할 주차 번호")
     lessons: List[str] = Field(min_length=1, description="해당 주차 레슨 목록")  # type: ignore
+    title: Optional[str] = Field(
+        None, min_length=2, max_length=50, description="주차 제목"
+    )
+    lessons: List[str] = Field(min_length=1, description="해당 주차 레슨 목록")  # type: ignore
 
     def to_dto(self, curriculum_id: str, owner_id: str) -> CreateWeekScheduleCommand:
         return CreateWeekScheduleCommand(
@@ -65,6 +75,7 @@ class CreateWeekScheduleRequest(BaseModel):
             owner_id=owner_id,
             week_number=self.week_number,
             lessons=self.lessons,
+            title=self.title,
         )
 
 
@@ -130,7 +141,9 @@ class CurriculumResponse(BaseModel):
     def from_dto(cls, dto) -> "CurriculumResponse":
         weeks: List[WeekScheduleRequest] = [
             WeekScheduleRequest(
-                week_number=week_schedule.week_number, lessons=week_schedule.lessons
+                week_number=week_schedule.week_number,
+                title=week_schedule.title,  # ✅ 응답에 title 포함
+                lessons=week_schedule.lessons,
             )
             for week_schedule in dto.week_schedules
         ]
