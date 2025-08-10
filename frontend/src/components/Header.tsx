@@ -1,4 +1,4 @@
-// src/components/Header.tsx
+// src/components/Header.tsx - 향상된 버전 (소셜 기능 추가)
 import {
   Box,
   Flex,
@@ -8,9 +8,33 @@ import {
   IconButton,
   useColorMode,
   useColorModeValue,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuDivider,
+  Avatar,
+  HStack,
+  Badge,
+  Text,
 } from '@chakra-ui/react';
-import { MoonIcon, SunIcon } from '@chakra-ui/icons';
+import { 
+  MoonIcon, 
+  SunIcon, 
+  ChevronDownIcon,
+  BellIcon,
+} from '@chakra-ui/icons';
+import { 
+  FaRss, 
+  FaBookmark, 
+  FaUsers, 
+  FaHeart,
+  FaComment,
+  FaCog,
+} from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { followAPI } from '../services/api';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -19,7 +43,32 @@ const Header = () => {
   
   // 테마에 따른 배경색 결정
   const headerBg = useColorModeValue('blue.500', 'blue.600');
+  const textColor = useColorModeValue('white', 'white');
   const isLoggedIn = !!localStorage.getItem('token');
+
+  // 소셜 통계 상태
+  const [followStats, setFollowStats] = useState<{
+    followers_count: number;
+    followees_count: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchFollowStats();
+    }
+  }, [isLoggedIn]);
+
+  const fetchFollowStats = async () => {
+    try {
+      // 현재 사용자 ID를 가져와야 하는데, 여기서는 임시로 처리
+      // 실제로는 auth context나 user store에서 가져와야 함
+      const currentUserId = 'current-user-id'; // TODO: 실제 사용자 ID 가져오기
+      const response = await followAPI.getFollowStats(currentUserId);
+      setFollowStats(response.data);
+    } catch (error) {
+      console.error('팔로우 통계 조회 실패:', error);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -34,12 +83,13 @@ const Header = () => {
   };
 
   return (
-    <Box bg={headerBg} color="white" px={4} py={3}>
+    <Box bg={headerBg} color={textColor} px={4} py={3}>
       <Flex align="center">
         <Heading 
           size="lg" 
           cursor="pointer"
           onClick={() => navigate('/')}
+          _hover={{ opacity: 0.8 }}
         >
           LLearn
         </Heading>
@@ -47,7 +97,7 @@ const Header = () => {
         <Spacer />
         
         {isLoggedIn ? (
-          <Flex gap={4} align="center">
+          <HStack spacing={4} align="center">
             {/* 테마 토글 버튼 */}
             <IconButton
               aria-label="테마 변경"
@@ -55,45 +105,128 @@ const Header = () => {
               onClick={toggleColorMode}
               variant="ghost"
               size="sm"
-              color="white"
+              color={textColor}
               _hover={{ bg: 'whiteAlpha.200' }}
             />
+
+            {/* 알림 버튼 */}
+            <IconButton
+              aria-label="알림"
+              icon={<BellIcon />}
+              variant="ghost"
+              size="sm"
+              color={textColor}
+              _hover={{ bg: 'whiteAlpha.200' }}
+              onClick={() => {
+                // TODO: 알림 페이지 또는 모달 구현
+                console.log('알림 클릭');
+              }}
+            />
             
+            {/* 네비게이션 버튼들 */}
             <Button 
               onClick={() => navigate('/dashboard')} 
               variant="ghost"
               bg={isActivePage('/dashboard') ? 'whiteAlpha.300' : 'transparent'}
               _hover={{ bg: 'whiteAlpha.200' }}
+              color={textColor}
             >
               대시보드
             </Button>
+
+            <Button 
+              onClick={() => navigate('/feed')} 
+              variant="ghost"
+              bg={isActivePage('/feed') ? 'whiteAlpha.300' : 'transparent'}
+              _hover={{ bg: 'whiteAlpha.200' }}
+              leftIcon={<FaRss />}
+              color={textColor}
+            >
+              피드
+            </Button>
+            
             <Button 
               onClick={() => navigate('/curriculum')} 
               variant="ghost"
               bg={isActivePage('/curriculum') ? 'whiteAlpha.300' : 'transparent'}
               _hover={{ bg: 'whiteAlpha.200' }}
+              color={textColor}
             >
               커리큘럼
             </Button>
+            
             <Button 
               onClick={() => navigate('/summary')} 
               variant="ghost"
               bg={isActivePage('/summary') ? 'whiteAlpha.300' : 'transparent'}
               _hover={{ bg: 'whiteAlpha.200' }}
+              color={textColor}
             >
               요약
             </Button>
-            <Button 
-              onClick={handleLogout} 
-              variant="ghost"
-              _hover={{ bg: 'whiteAlpha.200' }}
-            >
-              로그아웃
-            </Button>
-            <Box w="8" h="8" bg="gray.300" borderRadius="full" />
-          </Flex>
+
+            {/* 사용자 메뉴 */}
+            <Menu>
+              <MenuButton
+                as={Button}
+                variant="ghost"
+                rightIcon={<ChevronDownIcon />}
+                _hover={{ bg: 'whiteAlpha.200' }}
+                color={textColor}
+              >
+                <HStack spacing={2}>
+                  <Avatar size="sm" name="사용자" />
+                  <Box textAlign="left" display={{ base: 'none', md: 'block' }}>
+                    <Text fontSize="sm" fontWeight="semibold">사용자</Text>
+                    {followStats && (
+                      <Text fontSize="xs" opacity={0.8}>
+                        팔로워 {followStats.followers_count} · 팔로잉 {followStats.followees_count}
+                      </Text>
+                    )}
+                  </Box>
+                </HStack>
+              </MenuButton>
+              <MenuList color="black">
+                <MenuItem 
+                  icon={<FaUsers />}
+                  onClick={() => navigate('/social/profile')}
+                >
+                  내 프로필
+                </MenuItem>
+                <MenuItem 
+                  icon={<FaBookmark />}
+                  onClick={() => navigate('/bookmarks')}
+                >
+                  북마크
+                  {/* TODO: 북마크 수 표시 */}
+                </MenuItem>
+                <MenuItem 
+                  icon={<FaHeart />}
+                  onClick={() => navigate('/social/liked')}
+                >
+                  좋아요한 글
+                </MenuItem>
+                <MenuItem 
+                  icon={<FaComment />}
+                  onClick={() => navigate('/social/comments')}
+                >
+                  내 댓글
+                </MenuItem>
+                <MenuDivider />
+                <MenuItem 
+                  icon={<FaCog />}
+                  onClick={() => navigate('/settings')}
+                >
+                  설정
+                </MenuItem>
+                <MenuItem onClick={handleLogout}>
+                  로그아웃
+                </MenuItem>
+              </MenuList>
+            </Menu>
+          </HStack>
         ) : (
-          <Flex gap={2} align="center">
+          <HStack spacing={2} align="center">
             {/* 테마 토글 버튼 */}
             <IconButton
               aria-label="테마 변경"
@@ -101,15 +234,26 @@ const Header = () => {
               onClick={toggleColorMode}
               variant="ghost"
               size="sm"
-              color="white"
+              color={textColor}
               _hover={{ bg: 'whiteAlpha.200' }}
               mr={2}
             />
             
             <Button 
+              onClick={() => navigate('/feed')} 
+              variant="ghost"
+              _hover={{ bg: 'whiteAlpha.200' }}
+              leftIcon={<FaRss />}
+              color={textColor}
+            >
+              피드 구경하기
+            </Button>
+            
+            <Button 
               onClick={() => navigate('/login')} 
               variant="ghost"
               _hover={{ bg: 'whiteAlpha.200' }}
+              color={textColor}
             >
               로그인
             </Button>
@@ -117,10 +261,12 @@ const Header = () => {
               onClick={() => navigate('/signup')} 
               variant="outline"
               _hover={{ bg: 'whiteAlpha.200' }}
+              color={textColor}
+              borderColor={textColor}
             >
               회원가입
             </Button>
-          </Flex>
+          </HStack>
         )}
       </Flex>
     </Box>
