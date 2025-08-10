@@ -1,3 +1,4 @@
+// src/components/Header.tsx
 import {
   Box,
   Flex,
@@ -29,7 +30,7 @@ const Header = () => {
     if (path === '/' || path === '/dashboard') {
       return location.pathname === '/' || location.pathname === '/dashboard';
     }
-    return location.pathname === path;
+    return location.pathname.startsWith(path);
   };
 
   return (
@@ -73,6 +74,14 @@ const Header = () => {
               _hover={{ bg: 'whiteAlpha.200' }}
             >
               커리큘럼
+            </Button>
+            <Button 
+              onClick={() => navigate('/summary')} 
+              variant="ghost"
+              bg={isActivePage('/summary') ? 'whiteAlpha.300' : 'transparent'}
+              _hover={{ bg: 'whiteAlpha.200' }}
+            >
+              요약
             </Button>
             <Button 
               onClick={handleLogout} 

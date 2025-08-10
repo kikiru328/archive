@@ -1,3 +1,4 @@
+// src/App.tsx
 import { ChakraProvider, Box, extendTheme, ColorModeScript } from '@chakra-ui/react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
@@ -6,6 +7,8 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Curriculum from './pages/Curriculum';
 import CurriculumDetail from './pages/CurriculumDetail';
+import Summary from './pages/Summary';
+import SummaryDetail from './pages/SummaryDetail';
 
 // Chakra UI 테마 확장
 const theme = extendTheme({
@@ -36,6 +39,8 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/curriculum" element={<Curriculum />} />
               <Route path="/curriculum/:id" element={<CurriculumDetail />} />
+              <Route path="/summary" element={<Summary />} />
+              <Route path="/summary/:id" element={<SummaryDetail />} />
               <Route path="/" element={<Dashboard />} />
             </Routes>
           </Box>

@@ -1,3 +1,4 @@
+// src/services/api.ts
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
@@ -106,10 +107,35 @@ export const curriculumAPI = {
 };
 
 export const summaryAPI = {
-  submit: (data: { week: number; content: string; curriculum_id: string }) =>
-    api.post('/summaries', data),
+  // 요약 생성
+  create: (data: { 
+    curriculum_id: string; 
+    week_number: number; 
+    lesson_index?: number;
+    content: string;
+  }) => api.post('/summaries', data),
+  
+  // 내 요약 목록 조회
+  getAll: (params?: { page?: number; items_per_page?: number }) => 
+    api.get('/summaries/me', { params }),
+  
+  // 특정 요약 조회
+  getById: (id: string) => api.get(`/summaries/${id}`),
+  
+  // 커리큘럼/주차별 요약 조회
   getByWeek: (curriculumId: string, week: number) =>
     api.get(`/summaries/${curriculumId}/${week}`),
+  
+  // 요약 수정
+  update: (id: string, data: { content: string }) =>
+    api.patch(`/summaries/${id}`, data),
+  
+  // 요약 삭제
+  delete: (id: string) => api.delete(`/summaries/${id}`),
+  
+  // AI 피드백 요청
+  requestFeedback: (summaryId: string) =>
+    api.post(`/summaries/${summaryId}/feedback`),
 };
 
 export const feedbackAPI = {
