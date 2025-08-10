@@ -51,7 +51,7 @@ import {
 } from '@chakra-ui/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { curriculumAPI, curriculumTagAPI, tagAPI } from '../services/api';
-
+import { getCurrentUserId } from '../utils/auth';
 interface WeekSchedule {
   week_number: number;
   title: string; 
@@ -99,7 +99,8 @@ const CurriculumDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
-  
+  const currentUserId = getCurrentUserId();
+  const isOwner = curriculum && currentUserId && curriculum.owner_id === currentUserId;
   const [curriculum, setCurriculum] = useState<CurriculumDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -121,7 +122,7 @@ const CurriculumDetail: React.FC = () => {
   const { isOpen: isWeekModalOpen, onOpen: onWeekModalOpen, onClose: onWeekModalClose } = useDisclosure();
   const { isOpen: isEditLessonModalOpen, onOpen: onEditLessonModalOpen, onClose: onEditLessonModalClose } = useDisclosure();
   const { isOpen: isDeleteWeekModalOpen, onOpen: onDeleteWeekModalOpen, onClose: onDeleteWeekModalClose } = useDisclosure();
-  
+
   // 다크모드 대응 색상
   const bgColor = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.900', 'white');
@@ -835,7 +836,6 @@ const CurriculumDetail: React.FC = () => {
                                     colorScheme="green"
                                     title="요약 보기"
                                     onClick={() => {
-                                      // TODO: 해당 레슨의 요약 목록 페이지로 이동
                                       const params = new URLSearchParams({
                                         curriculum_id: curriculum.id,
                                         week_number: week.week_number.toString(),
@@ -845,22 +845,26 @@ const CurriculumDetail: React.FC = () => {
                                       navigate(`/summary?${params.toString()}`);
                                     }}
                                   />
-                                  <IconButton
-                                    aria-label="수정"
-                                    icon={<EditIcon />}
-                                    size="sm"
-                                    variant="ghost"
-                                    colorScheme="blue"
-                                    onClick={() => handleEditLesson(week.week_number, index, lesson)}
-                                  />
-                                  <IconButton
-                                    aria-label="삭제"
-                                    icon={<DeleteIcon />}
-                                    size="sm"
-                                    variant="ghost"
-                                    colorScheme="red"
-                                    onClick={() => handleDeleteLesson(week.week_number, index)}
-                                  />
+                                  {isOwner && (
+                                    <>
+                                      <IconButton
+                                        aria-label="수정"
+                                        icon={<EditIcon />}
+                                        size="sm"
+                                        variant="ghost"
+                                        colorScheme="blue"
+                                        onClick={() => handleEditLesson(week.week_number, index, lesson)}
+                                      />
+                                      <IconButton
+                                        aria-label="삭제"
+                                        icon={<DeleteIcon />}
+                                        size="sm"
+                                        variant="ghost"
+                                        colorScheme="red"
+                                        onClick={() => handleDeleteLesson(week.week_number, index)}
+                                      />
+                                    </>
+                                  )}
                                 </HStack>
                               </HStack>
                             </CardBody>

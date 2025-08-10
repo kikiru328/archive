@@ -42,7 +42,7 @@ import {
 } from '@chakra-ui/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { summaryAPI, curriculumAPI, feedbackAPI } from '../services/api';
-
+import { getCurrentUserId } from '../utils/auth';
 interface SummaryDetail {
   id: string;
   curriculum_id: string;
@@ -64,6 +64,7 @@ interface Feedback {
 
 interface Curriculum {
   id: string;
+  owner_id: string;
   title: string;
   week_schedules: Array<{
     week_number: number;
@@ -94,7 +95,7 @@ const SummaryDetail: React.FC = () => {
   const cardBg = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const highlightBg = useColorModeValue('blue.50', 'blue.900');
-
+  const isOwner = curriculum && curriculum.owner_id === getCurrentUserId();
   useEffect(() => {
     if (id) {
       fetchSummaryDetail();

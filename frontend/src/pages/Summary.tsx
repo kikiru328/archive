@@ -46,7 +46,7 @@ import {
 } from '@chakra-ui/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { summaryAPI, curriculumAPI, feedbackAPI } from '../services/api';
-
+import { getCurrentUserId } from '../utils/auth';
 interface Summary {
   id: string;
   curriculum_id: string;
@@ -66,6 +66,7 @@ interface WeekSchedule {
 
 interface Curriculum {
   id: string;
+  owner_id: string;
   title: string;
   total_weeks: number;
   week_schedules?: WeekSchedule[];
@@ -148,13 +149,11 @@ const Summary: React.FC = () => {
       setLoading(true);
       setError('');
       
+      // 내 커리큘럼만 조회 (이미 올바른 엔드포인트 사용 중)
       const [curriculumResponse, summaryResponse] = await Promise.all([
-        curriculumAPI.getAll(),
-        summaryAPI.getAll()
+        curriculumAPI.getAll(), // 이미 '/curriculums/me' 엔드포인트 사용
+        summaryAPI.getAll()     // 이미 '/users/me/summaries' 엔드포인트 사용
       ]);
-      
-      console.log('커리큘럼 응답:', curriculumResponse.data);
-      console.log('요약 응답:', summaryResponse.data);
       
       const curriculumData = curriculumResponse.data.curriculums || [];
       setCurriculums(curriculumData);
@@ -198,7 +197,18 @@ const Summary: React.FC = () => {
       });
       return;
     }
+    const selectedCurriculum = curriculums.find(c => c.id === summaryForm.curriculum_id);
+    const currentUserId = getCurrentUserId();
 
+    if (!selectedCurriculum || selectedCurriculum.owner_id !== currentUserId) {
+      toast({
+        title: '권한이 없습니다',
+        description: '본인의 커리큘럼에만 요약을 작성할 수 있습니다.',
+        status: 'error',
+        duration: 3000,
+      });
+      return;
+    }
     try {
       setSubmitting(true);
       await summaryAPI.create({
@@ -699,7 +709,7 @@ const Summary: React.FC = () => {
                 <FormControl isRequired>
                   <FormLabel color={textColor}>커리큘럼 선택</FormLabel>
                   <Select
-                    placeholder="커리큘럼을 선택하세요"
+                    placeholder="내 커리큘럼을 선택하세요"
                     value={summaryForm.curriculum_id}
                     onChange={(e) => setSummaryForm({ 
                       ...summaryForm, 
@@ -709,11 +719,17 @@ const Summary: React.FC = () => {
                     color={textColor}
                     borderColor={borderColor}
                   >
-                    {curriculums.map((curriculum) => (
-                      <option key={curriculum.id} value={curriculum.id}>
-                        {curriculum.title}
-                      </option>
-                    ))}
+                    {curriculums
+                      .filter(curriculum => {
+                        const currentUserId = getCurrentUserId();
+                        // owner_id가 있는 경우에만 비교, 없으면 모든 커리큘럼 표시 (안전장치)
+                        return !curriculum.owner_id || curriculum.owner_id === currentUserId;
+                      })
+                      .map((curriculum) => (
+                        <option key={curriculum.id} value={curriculum.id}>
+                          {curriculum.title}
+                        </option>
+                      ))}
                   </Select>
                 </FormControl>
 
