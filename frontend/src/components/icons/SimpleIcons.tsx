@@ -1,5 +1,6 @@
-// src/components/icons/SimpleIcons.tsx
+// frontend/src/components/icons/SimpleIcons.tsx
 import React from 'react';
+import { IconType } from 'react-icons';
 import { 
   FaRss, 
   FaBookmark, 
@@ -17,23 +18,18 @@ import {
   FaRegBookmark,
 } from 'react-icons/fa';
 
-// 타입을 강제로 캐스팅하여 컴포넌트로 사용
-const IconWrapper = (IconComponent: any) => (props: any) => {
-  const Component = IconComponent as React.ComponentType<any>;
-  return React.createElement(Component, props);
-};
-
-export const RssIcon = IconWrapper(FaRss);
-export const BookmarkIcon = IconWrapper(FaBookmark);
-export const BookmarkOutlineIcon = IconWrapper(FaRegBookmark);
-export const UsersIcon = IconWrapper(FaUsers);
-export const HeartIcon = IconWrapper(FaHeart);
-export const HeartOutlineIcon = IconWrapper(FaRegHeart);
-export const CommentIcon = IconWrapper(FaComment);
-export const CogIcon = IconWrapper(FaCog);
-export const TrashIcon = IconWrapper(FaTrash);
-export const EyeIcon = IconWrapper(FaEye);
-export const SyncIcon = IconWrapper(FaSync);
-export const SearchIcon = IconWrapper(FaSearch);
-export const FilterIcon = IconWrapper(FaFilter);
-export const ShareIcon = IconWrapper(FaShareAlt);
+// 간단한 래퍼 컴포넌트
+export const RssIcon: React.FC<{ size?: string | number }> = (props) => <FaRss {...props} />;
+export const BookmarkIcon: React.FC<{ size?: string | number }> = (props) => <FaBookmark {...props} />;
+export const BookmarkOutlineIcon: React.FC<{ size?: string | number }> = (props) => <FaRegBookmark {...props} />;
+export const UsersIcon: React.FC<{ size?: string | number }> = (props) => <FaUsers {...props} />;
+export const HeartIcon: React.FC<{ size?: string | number }> = (props) => <FaHeart {...props} />;
+export const HeartOutlineIcon: React.FC<{ size?: string | number }> = (props) => <FaRegHeart {...props} />;
+export const CommentIcon: React.FC<{ size?: string | number }> = (props) => <FaComment {...props} />;
+export const CogIcon: React.FC<{ size?: string | number }> = (props) => <FaCog {...props} />;
+export const TrashIcon: React.FC<{ size?: string | number }> = (props) => <FaTrash {...props} />;
+export const EyeIcon: React.FC<{ size?: string | number }> = (props) => <FaEye {...props} />;
+export const SyncIcon: React.FC<{ size?: string | number }> = (props) => <FaSync {...props} />;
+export const SearchIcon: React.FC<{ size?: string | number }> = (props) => <FaSearch {...props} />;
+export const FilterIcon: React.FC<{ size?: string | number }> = (props) => <FaFilter {...props} />;
+export const ShareIcon: React.FC<{ size?: string | number }> = (props) => <FaShareAlt {...props} />;

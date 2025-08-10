@@ -77,7 +77,7 @@ const SummaryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
-  
+  const currentUserId = getCurrentUserId();
   const [summary, setSummary] = useState<SummaryDetail | null>(null);
   const [curriculum, setCurriculum] = useState<Curriculum | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,7 +95,7 @@ const SummaryDetail: React.FC = () => {
   const cardBg = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const highlightBg = useColorModeValue('blue.50', 'blue.900');
-  const isOwner = curriculum && curriculum.owner_id === getCurrentUserId();
+  const isOwner = curriculum && currentUserId && curriculum.owner_id === currentUserId;
   useEffect(() => {
     if (id) {
       fetchSummaryDetail();

@@ -1,4 +1,3 @@
-// src/pages/CurriculumDetail.tsx
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -52,6 +51,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { curriculumAPI, curriculumTagAPI, tagAPI } from '../services/api';
 import { getCurrentUserId } from '../utils/auth';
+
 interface WeekSchedule {
   week_number: number;
   title: string; 
@@ -80,6 +80,7 @@ interface WeekForm {
   title: string; 
   lessons: string[];
 }
+
 interface Tag {
   id: string;
   name: string;
@@ -95,12 +96,14 @@ interface Category {
   is_active: boolean;
   usage_count: number;
 }
+
 const CurriculumDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
   const currentUserId = getCurrentUserId();
-  const isOwner = curriculum && currentUserId && curriculum.owner_id === currentUserId;
+  
+  // State 선언
   const [curriculum, setCurriculum] = useState<CurriculumDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -116,12 +119,17 @@ const CurriculumDetail: React.FC = () => {
   const [tagSuggestions, setTagSuggestions] = useState<Tag[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
 
+  // 계산된 값들 (state 선언 후에)
+  const isOwner = curriculum && currentUserId && curriculum.owner_id === currentUserId;
+
+  // 모달 상태들
   const { isOpen: isLessonModalOpen, onOpen: onLessonModalOpen, onClose: onLessonModalClose } = useDisclosure();
   const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure();
   const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure();
   const { isOpen: isWeekModalOpen, onOpen: onWeekModalOpen, onClose: onWeekModalClose } = useDisclosure();
   const { isOpen: isEditLessonModalOpen, onOpen: onEditLessonModalOpen, onClose: onEditLessonModalClose } = useDisclosure();
   const { isOpen: isDeleteWeekModalOpen, onOpen: onDeleteWeekModalOpen, onClose: onDeleteWeekModalClose } = useDisclosure();
+  const { isOpen: isTagModalOpen, onOpen: onTagModalOpen, onClose: onTagModalClose } = useDisclosure();
 
   // 다크모드 대응 색상
   const bgColor = useColorModeValue('white', 'gray.800');
@@ -130,7 +138,6 @@ const CurriculumDetail: React.FC = () => {
   const cardBg = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const hoverBg = useColorModeValue('gray.50', 'gray.600');
-
   useEffect(() => {
     if (id) {
       fetchCurriculumDetail();
