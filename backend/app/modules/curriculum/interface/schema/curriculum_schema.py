@@ -158,11 +158,18 @@ class CurriculumResponse(BaseModel):
         )
 
 
+class WeekScheduleResponse(BaseModel):
+    week_number: int
+    title: str
+    lessons: List[str]
+
+
 class CurriculumBriefResponse(BaseModel):
     id: str
     owner_id: str
     title: str
     visibility: VisibilityEnum
+    week_schedules: List[WeekScheduleResponse]
     total_weeks: int
     total_lessons: int
     created_at: datetime
@@ -175,6 +182,14 @@ class CurriculumBriefResponse(BaseModel):
             owner_id=dto.owner_id,
             title=dto.title,
             visibility=dto.visibility,
+            week_schedules=[  # ✅ DTO → 응답 매핑
+                WeekScheduleResponse(
+                    week_number=ws.week_number,
+                    title=ws.title,
+                    lessons=ws.lessons,
+                )
+                for ws in dto.week_schedules
+            ],
             total_weeks=dto.total_weeks,
             total_lessons=dto.total_lessons,
             created_at=dto.created_at,

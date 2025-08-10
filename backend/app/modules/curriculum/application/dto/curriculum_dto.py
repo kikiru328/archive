@@ -163,6 +163,7 @@ class CurriculumBriefDTO:
     owner_id: str
     title: str
     visibility: str
+    week_schedules: List[WeekScheduleDTO]
     total_weeks: int
     total_lessons: int
     created_at: datetime
@@ -175,6 +176,9 @@ class CurriculumBriefDTO:
             owner_id=curriculum.owner_id,
             title=curriculum.title.value,
             visibility=curriculum.visibility.value,
+            week_schedules=[  # ✅ 도메인 → DTO 매핑
+                WeekScheduleDTO.from_domain(ws) for ws in curriculum.week_schedules
+            ],
             total_weeks=curriculum.get_total_weeks(),
             total_lessons=curriculum.get_total_lessons(),
             created_at=curriculum.created_at,
