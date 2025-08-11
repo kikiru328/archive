@@ -27,8 +27,14 @@ from app.modules.taxonomy.interface.controller.curriculum_tag_controller import 
     taxonomy_router,
 )
 
-from app.modules.social.interface.controller.like_controller import like_router
-from app.modules.social.interface.controller.comment_controller import comment_router
+from app.modules.social.interface.controller.like_controller import (
+    like_router,
+    user_like_router,
+)
+from app.modules.social.interface.controller.comment_controller import (
+    comment_router,
+    user_comment_router,
+)
 from app.modules.social.interface.controller.bookmark_controller import (
     bookmark_router,
     user_bookmark_router,
@@ -68,7 +74,9 @@ v1_router.include_router(category_router)
 v1_router.include_router(taxonomy_router)
 
 v1_router.include_router(like_router)
+v1_router.include_router(user_like_router)
 v1_router.include_router(comment_router)
+v1_router.include_router(user_comment_router)
 v1_router.include_router(bookmark_router)
 v1_router.include_router(user_bookmark_router)
 v1_router.include_router(social_router)
