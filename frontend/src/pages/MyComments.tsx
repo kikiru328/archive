@@ -83,40 +83,44 @@ const MyComments: React.FC = () => {
   }, [page]);
 
   const fetchMyComments = async (reset = true) => {
-    try {
-      if (reset) {
-        setLoading(true);
-        setPage(1);
+      try {
+        if (reset) {
+          setLoading(true);
+          setPage(1);
+        }
+
+        const response = await commentAPI.getMyComments({
+          page: reset ? 1 : page,
+          items_per_page: 20,
+        });
+
+        const newComments = response.data.comments || [];
+
+        if (reset) {
+          setComments(newComments);
+        } else {
+          setComments(prev => [...prev, ...newComments]);
+        }
+
+        setTotalCount(response.data.total_count);
+        setHasMore((reset ? 1 : page) * 20 < response.data.total_count);
+        setError('');
+      } catch (error: any) {
+        console.error('내 댓글 조회 실패:', error);
+        
+        if (error.response?.status === 404) {
+          // 404인 경우 백엔드에서 아직 구현되지 않은 상태
+          setError('댓글 기능이 아직 준비되지 않았습니다.');
+          setComments([]); // 빈 배열로 설정
+          setTotalCount(0);
+          setHasMore(false);
+        } else {
+          setError('댓글을 불러오는데 실패했습니다.');
+        }
+      } finally {
+        setLoading(false);
       }
-
-      const response = await commentAPI.getMyComments({
-        page: reset ? 1 : page,
-        items_per_page: 20,
-      });
-
-      const newComments = response.data.comments || [];
-
-      if (reset) {
-        setComments(newComments);
-      } else {
-        setComments(prev => [...prev, ...newComments]);
-      }
-
-      setTotalCount(response.data.total_count);
-      setHasMore((reset ? 1 : page) * 20 < response.data.total_count);
-      setError('');
-    } catch (error: any) {
-      console.error('내 댓글 조회 실패:', error);
-      
-      if (error.response?.status === 404) {
-        setError('댓글 기능이 아직 준비되지 않았습니다.');
-      } else {
-        setError('댓글을 불러오는데 실패했습니다.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   const handleEditComment = (comment: MyComment) => {
     setEditingComment(comment);

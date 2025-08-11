@@ -35,6 +35,7 @@ import {
   CommentIcon,
   CogIcon 
 } from '../components/icons/SimpleIcons';
+import { getCurrentUserId } from '../utils/auth';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -62,7 +63,11 @@ const Header = () => {
     try {
       // 현재 사용자 ID를 가져와야 하는데, 여기서는 임시로 처리
       // 실제로는 auth context나 user store에서 가져와야 함
-      const currentUserId = 'current-user-id'; // TODO: 실제 사용자 ID 가져오기
+      const currentUserId = getCurrentUserId(); // auth utils에서 현재 사용자 ID 가져오기
+      if (!currentUserId) {
+        console.log('현재 사용자 ID를 찾을 수 없음');
+        return;
+      }
       const response = await followAPI.getFollowStats(currentUserId);
       setFollowStats(response.data);
     } catch (error) {

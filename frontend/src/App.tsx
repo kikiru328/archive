@@ -60,7 +60,9 @@ function App() {
               <Route path="/feed" element={<Feed />} />
               <Route path="/bookmarks" element={<Bookmarks />} />
               <Route path="/liked" element={<LikedCurriculums />} />
+              <Route path="/social/liked" element={<LikedCurriculums />} />
               <Route path="/comments" element={<MyComments />} />
+              <Route path="/social/comments" element={<MyComments />} />
               
               {/* 기본 라우트 */}
               <Route path="/" element={<Dashboard />} />
