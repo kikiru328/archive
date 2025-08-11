@@ -127,17 +127,19 @@ class CommentBriefResponse(BaseModel):
     id: str
     curriculum_id: str
     user_id: str
+    user_name: str  # 사용자 이름 추가
     content_snippet: str
     content_length: int
     created_at: datetime
 
     @classmethod
-    def from_dto(cls, dto: CommentDTO) -> "CommentBriefResponse":
+    def from_dto(cls, dto: CommentDTO, user_name: str) -> "CommentBriefResponse":
         snippet = dto.content[:100] + "..." if len(dto.content) > 100 else dto.content
         return cls(
             id=dto.id,
             curriculum_id=dto.curriculum_id,
             user_id=dto.user_id,
+            user_name=user_name or "알 수 없는 사용자",  # 사용자 이름 추가
             content_snippet=snippet,
             content_length=len(dto.content),
             created_at=dto.created_at,
@@ -153,13 +155,17 @@ class CommentPageResponse(BaseModel):
     comments: List[CommentBriefResponse]
 
     @classmethod
-    def from_dto(cls, dto: CommentPageDTO) -> "CommentPageResponse":
+    def from_dto(cls, dto: CommentPageDTO, user_names: dict) -> "CommentPageResponse":
+        user_names = user_names or {}
         return cls(
             total_count=dto.total_count,
             page=dto.page,
             items_per_page=dto.items_per_page,
             comments=[
-                CommentBriefResponse.from_dto(comment) for comment in dto.comments
+                CommentBriefResponse.from_dto(
+                    comment, user_names.get(comment.user_id, "알 수 없는 사용자")
+                )
+                for comment in dto.comments
             ],
         )
 

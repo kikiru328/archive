@@ -19,6 +19,7 @@ from app.modules.social.domain.service.social_domain_service import SocialDomain
 from app.modules.social.domain.vo.comment_content import CommentContent
 from app.modules.user.domain.vo.role import RoleVO
 from app.common.monitoring.metrics import increment_comment_creation
+from app.modules.user.domain.repository.user_repo import IUserRepository
 
 
 class CommentService:
@@ -26,10 +27,12 @@ class CommentService:
         self,
         comment_repo: ICommentRepository,
         social_domain_service: SocialDomainService,
+        user_repo: IUserRepository,
         ulid: ULID = ULID(),
     ) -> None:
         self.comment_repo: ICommentRepository = comment_repo
         self.social_domain_service: SocialDomainService = social_domain_service
+        self.user_repo: IUserRepository = user_repo
         self.ulid = ulid
 
     async def create_comment(
@@ -168,3 +171,24 @@ class CommentService:
             items_per_page=query.items_per_page,
             comments=comments,
         )
+
+    async def get_comments_with_user_names(
+        self,
+        query: CommentQuery,
+        user_id: str,
+        role: RoleVO,
+    ) -> tuple[CommentPageDTO, dict]:
+        """댓글 목록과 사용자 이름을 함께 조회"""
+        comment_page = await self.get_comments(query, user_id, role)
+
+        # 댓글 작성자들의 사용자 ID 수집
+        user_ids = list(set([comment.user_id for comment in comment_page.comments]))
+
+        # 사용자 이름들 조회
+        user_names = {}
+        for uid in user_ids:
+            user = await self.user_repo.find_by_id(uid)
+            if user:
+                user_names[uid] = user.name.value
+
+        return comment_page, user_names

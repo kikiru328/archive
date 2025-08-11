@@ -85,6 +85,9 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
   const textColor = useColorModeValue('gray.900', 'white');
   const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
   const commentBoxBg = useColorModeValue('gray.50', 'gray.600');
+  const commentWriteBg = useColorModeValue('blue.50', 'blue.900');
+  const commentEmptyBg = useColorModeValue('gray.50', 'gray.800');
+  const commentBorderColor = useColorModeValue('gray.200', 'gray.600');
 
   useEffect(() => {
     fetchSocialStats();
@@ -119,9 +122,12 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
       setComments(commentsData);
     } catch (error) {
       console.error('댓글 조회 실패:', error);
+      // 에러가 발생해도 빈 배열로 설정하여 모달이 정상 작동하도록 함
+      setComments([]);
       toast({
-        title: '댓글을 불러오는데 실패했습니다',
-        status: 'error',
+        title: '댓글을 불러올 수 없습니다',
+        description: '새 댓글은 작성할 수 있습니다',
+        status: 'warning',
         duration: 3000,
       });
     } finally {
@@ -294,7 +300,59 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
     });
   };
 
-  if (!stats) return null;
+  if (!stats) {
+    // stats가 없을 때 기본값으로 렌더링
+    return (
+      <HStack spacing={4}>
+        <HStack spacing={1}>
+          <IconButton
+            aria-label="좋아요"
+            icon={<HeartOutlineIcon />}
+            color={iconColor}
+            variant="ghost"
+            size={size}
+            isDisabled
+          />
+          {showCounts && <Text fontSize="sm" color={iconColor}>0</Text>}
+        </HStack>
+
+        <HStack spacing={1}>
+          <IconButton
+            aria-label="댓글"
+            icon={<CommentIcon />}
+            color={iconColor}
+            variant="ghost"
+            size={size}
+            onClick={handleCommentClick}
+            _hover={{
+              color: 'blue.500',
+              transform: 'scale(1.1)',
+            }}
+            transition="all 0.2s"
+          />
+          {showCounts && <Text fontSize="sm" color={iconColor}>0</Text>}
+        </HStack>
+
+        <IconButton
+          aria-label="북마크"
+          icon={<BookmarkOutlineIcon />}
+          color={iconColor}
+          variant="ghost"
+          size={size}
+          isDisabled
+        />
+
+        <IconButton
+          aria-label="공유"
+          icon={<ShareIcon />}
+          color={iconColor}
+          variant="ghost"
+          size={size}
+          onClick={handleShare}
+        />
+      </HStack>
+    );
+  }
 
   return (
     <>
@@ -392,78 +450,99 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4} align="stretch">
-              {/* 새 댓글 작성 */}
-              <VStack spacing={3}>
-                <FormControl>
-                  <FormLabel>댓글 작성</FormLabel>
-                  <Textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="이 커리큘럼에 대한 의견을 남겨주세요..."
-                    rows={3}
-                  />
-                </FormControl>
-                <Button
-                  colorScheme="blue"
-                  onClick={handleSubmitComment}
-                  isLoading={submittingComment}
-                  isDisabled={!newComment.trim()}
-                  alignSelf="flex-end"
-                >
-                  댓글 작성
-                </Button>
-              </VStack>
+              {/* 새 댓글 작성 - 더 눈에 띄게 개선 */}
+              <Box p={4} bg={commentWriteBg} borderRadius="md" borderWidth="1px" borderColor="blue.200">
+                <VStack spacing={3} align="stretch">
+                  <Text fontWeight="semibold" color="blue.600">
+                    💬 새 댓글 작성하기
+                  </Text>
+                  <FormControl>
+                    <Textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="이 커리큘럼에 대한 의견을 남겨주세요..."
+                      rows={4}
+                      resize="vertical"
+                      focusBorderColor="blue.400"
+                    />
+                    <Text fontSize="xs" color={secondaryTextColor} mt={1}>
+                      {newComment.length}/1000자
+                    </Text>
+                  </FormControl>
+                  <HStack justify="space-between">
+                    <Text fontSize="sm" color={secondaryTextColor}>
+                      💡 건설적인 댓글을 남겨주세요
+                    </Text>
+                    <Button
+                      colorScheme="blue"
+                      size="sm"
+                      onClick={handleSubmitComment}
+                      isLoading={submittingComment}
+                      isDisabled={!newComment.trim() || newComment.length > 1000}
+                      leftIcon={<Text>✍️</Text>}
+                    >
+                      댓글 작성
+                    </Button>
+                  </HStack>
+                </VStack>
+              </Box>
 
               <Divider />
 
               {/* 댓글 목록 */}
-              {loadingComments ? (
-                <VStack py={4}>
-                  <Spinner />
-                  <Text color={secondaryTextColor}>댓글을 불러오는 중...</Text>
-                </VStack>
-              ) : comments.length === 0 ? (
-                <Box textAlign="center" py={6}>
-                  <Text color={secondaryTextColor}>
-                    아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!
-                  </Text>
-                </Box>
-              ) : (
-                <VStack spacing={3} align="stretch" maxH="400px" overflowY="auto">
-                  <Text fontSize="sm" color={secondaryTextColor}>
-                    총 {comments.length}개의 댓글
-                  </Text>
-                  {comments.map((comment, index) => {
-                    console.log(`댓글 ${index + 1}:`, comment);
-                    
-                    // 사용자 이름 결정 (현재 백엔드에서 제공하지 않으므로 user_id 사용)
-                    const displayName = comment.username || 
-                                       comment.user_name || 
-                                       `사용자${comment.user_id?.slice(-4) || index}`;
-                    
-                    return (
-                      <Box key={comment.id || index} p={3} borderRadius="md" bg={commentBoxBg}>
-                        <HStack spacing={3} align="start">
-                          <Avatar name={displayName} size="sm" />
-                          <VStack align="start" spacing={1} flex={1}>
-                            <HStack justify="space-between" w="100%">
-                              <Text fontWeight="semibold" fontSize="sm" color={textColor}>
-                                {displayName}
+              <VStack spacing={2} align="stretch">
+                <Text fontWeight="semibold" color={textColor}>
+                  댓글 목록 ({stats.comment_count})
+                </Text>
+                {loadingComments ? (
+                  <VStack py={6}>
+                    <Spinner color="blue.500" />
+                    <Text color={secondaryTextColor}>댓글을 불러오는 중...</Text>
+                  </VStack>
+                ) : comments.length === 0 ? (
+                  <Box textAlign="center" py={8} bg={commentEmptyBg} borderRadius="md">
+                    <Text color={secondaryTextColor} mb={2}>
+                      🤔 아직 댓글이 없습니다
+                    </Text>
+                    <Text fontSize="sm" color={secondaryTextColor}>
+                      첫 번째 댓글을 남겨보세요!
+                    </Text>
+                  </Box>
+                ) : (
+                  <VStack spacing={3} align="stretch" maxH="400px" overflowY="auto">
+                    {comments.map((comment, index) => {
+                      console.log(`댓글 ${index + 1}:`, comment);
+                      
+                      // 사용자 이름 결정 (현재 백엔드에서 제공하지 않으므로 user_id 사용)
+                      const displayName = comment.username || 
+                                         comment.user_name || 
+                                         `사용자${comment.user_id?.slice(-4) || index}`;
+                      
+                      return (
+                        <Box key={comment.id || index} p={3} borderRadius="md" bg={commentBoxBg} 
+                             borderWidth="1px" borderColor={commentBorderColor}>
+                          <HStack spacing={3} align="start">
+                            <Avatar name={displayName} size="sm" />
+                            <VStack align="start" spacing={1} flex={1}>
+                              <HStack justify="space-between" w="100%">
+                                <Text fontWeight="semibold" fontSize="sm" color={textColor}>
+                                  {displayName}
+                                </Text>
+                                <Text fontSize="xs" color={secondaryTextColor}>
+                                  {comment.created_at ? formatDate(comment.created_at) : '방금 전'}
+                                </Text>
+                              </HStack>
+                              <Text fontSize="sm" lineHeight="1.5" color={textColor}>
+                                {comment.content || comment.content_snippet || '내용이 없습니다'}
                               </Text>
-                              <Text fontSize="xs" color={secondaryTextColor}>
-                                {comment.created_at ? formatDate(comment.created_at) : '방금 전'}
-                              </Text>
-                            </HStack>
-                            <Text fontSize="sm" lineHeight="1.4" color={textColor}>
-                              {comment.content || comment.content_snippet || '내용이 없습니다'}
-                            </Text>
-                          </VStack>
-                        </HStack>
-                      </Box>
-                    );
-                  })}
-                </VStack>
-              )}
+                            </VStack>
+                          </HStack>
+                        </Box>
+                      );
+                    })}
+                  </VStack>
+                )}
+              </VStack>
             </VStack>
           </ModalBody>
           <ModalFooter>

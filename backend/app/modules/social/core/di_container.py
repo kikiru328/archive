@@ -16,6 +16,7 @@ class SocialContainer(containers.DeclarativeContainer):
     # Dependencies
     session: providers.Dependency[object] = providers.Dependency()
     curriculum_repository: providers.Dependency[object] = providers.Dependency()
+    user_repository: providers.Dependency[object] = providers.Dependency()
 
     # Repositories
     like_repository = providers.Factory(
@@ -54,6 +55,7 @@ class SocialContainer(containers.DeclarativeContainer):
         CommentService,
         comment_repo=comment_repository,
         social_domain_service=social_domain_service,
+        user_repo=user_repository,
         ulid=providers.Singleton(ULID),
     )
 

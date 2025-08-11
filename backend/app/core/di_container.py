@@ -231,6 +231,7 @@ class Container(containers.DeclarativeContainer):
         SocialContainer,
         session=db_session,
         curriculum_repository=curriculum_repository,
+        user_repository=user_repository,
     )
     like_service = social_container.like_service
     comment_service = social_container.comment_service
