@@ -312,7 +312,16 @@ const Profile: React.FC = () => {
                 {/* 팔로우 통계 */}
                 {followStats && (
                   <>
-                    <Stat textAlign="center" bg={statBg} p={4} borderRadius="md">
+                    <Stat 
+                      textAlign="center" 
+                      bg={statBg} 
+                      p={4} 
+                      borderRadius="md"
+                      cursor="pointer" // ✅ 추가
+                      _hover={{ transform: 'scale(1.02)', shadow: 'md' }} // ✅ 추가
+                      transition="all 0.2s" // ✅ 추가
+                      onClick={() => navigate('/social/follow?tab=followers')} // ✅ 추가
+                    >
                       <StatLabel color={secondaryTextColor}>팔로워</StatLabel>
                       <StatNumber color={textColor}>{followStats.followers_count}</StatNumber>
                       <StatHelpText color={secondaryTextColor}>
@@ -321,7 +330,16 @@ const Profile: React.FC = () => {
                       </StatHelpText>
                     </Stat>
                     
-                    <Stat textAlign="center" bg={statBg} p={4} borderRadius="md">
+                    <Stat 
+                      textAlign="center" 
+                      bg={statBg} 
+                      p={4} 
+                      borderRadius="md"
+                      cursor="pointer" // ✅ 추가
+                      _hover={{ transform: 'scale(1.02)', shadow: 'md' }} // ✅ 추가
+                      transition="all 0.2s" // ✅ 추가
+                      onClick={() => navigate('/social/follow?tab=following')} // ✅ 추가
+                    >
                       <StatLabel color={secondaryTextColor}>팔로잉</StatLabel>
                       <StatNumber color={textColor}>{followStats.followees_count}</StatNumber>
                       <StatHelpText color={secondaryTextColor}>
@@ -482,14 +500,7 @@ const Profile: React.FC = () => {
                               variant="outline"
                               height="80px"
                               w="100%"
-                              onClick={() => {
-                                toast({
-                                  title: '팔로워 목록',
-                                  description: '팔로워 목록 페이지가 곧 추가될 예정입니다',
-                                  status: 'info',
-                                  duration: 3000,
-                                });
-                              }}
+                              onClick={() => navigate('/social/follow?tab=followers')} // ✅ 이 부분 수정
                             >
                               <VStack spacing={2}>
                                 <Text fontWeight="bold">팔로워</Text>
@@ -505,14 +516,7 @@ const Profile: React.FC = () => {
                               variant="outline"
                               height="80px"
                               w="100%"
-                              onClick={() => {
-                                toast({
-                                  title: '팔로잉 목록',
-                                  description: '팔로잉 목록 페이지가 곧 추가될 예정입니다',
-                                  status: 'info',
-                                  duration: 3000,
-                                });
-                              }}
+                              onClick={() => navigate('/social/follow?tab=following')} // ✅ 이 부분 수정
                             >
                               <VStack spacing={2}>
                                 <Text fontWeight="bold">팔로잉</Text>

@@ -14,7 +14,8 @@ import Bookmarks from './pages/Bookmarks';
 import LikedCurriculums from './pages/LikedCurriculums';
 import MyComments from './pages/MyComments';
 import Profile from './pages/Profile';
-
+import FollowList from './pages/FollowList';
+import UserExplore from './pages/UserExplore';
 // Chakra UI 테마 확장
 const theme = extendTheme({
   config: {
@@ -68,6 +69,11 @@ function App() {
               {/* 프로필 */}
               <Route path="/profile" element={<Profile />} />
               <Route path="/social/profile" element={<Profile />} />
+              
+              {/* ✅ 팔로우 관련 라우트 추가 */}
+              <Route path="/social/follow" element={<FollowList />} />
+              <Route path="/social/users/:userId/follow" element={<FollowList />} />
+              <Route path="/social/explore" element={<UserExplore />} />
               
               {/* 기본 라우트 */}
               <Route path="/" element={<Dashboard />} />

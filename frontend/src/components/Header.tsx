@@ -26,14 +26,15 @@ import {
 } from '@chakra-ui/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { followAPI } from '../services/api';
+import { followAPI, userAPI } from '../services/api';
 import { 
   RssIcon, 
   BookmarkIcon, 
   UsersIcon, 
   HeartIcon,
   CommentIcon,
-  CogIcon 
+  CogIcon,
+  SearchIcon
 } from '../components/icons/SimpleIcons';
 import { getCurrentUserId } from '../utils/auth';
 
@@ -46,7 +47,11 @@ const Header = () => {
   const headerBg = useColorModeValue('blue.500', 'blue.600');
   const textColor = useColorModeValue('white', 'white');
   const isLoggedIn = !!localStorage.getItem('token');
-
+  // ✅ 사용자 정보 상태 추가
+  const [userProfile, setUserProfile] = useState<{
+    name: string;
+    email: string;
+  } | null>(null);
   // 소셜 통계 상태
   const [followStats, setFollowStats] = useState<{
     followers_count: number;
@@ -55,9 +60,22 @@ const Header = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
+      fetchUserProfile();
       fetchFollowStats();
     }
   }, [isLoggedIn]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await userAPI.getProfile();
+      setUserProfile({
+        name: response.data.name,
+        email: response.data.email
+      });
+    } catch (error) {
+      console.error('사용자 프로필 조회 실패:', error);
+    }
+  };
 
   const fetchFollowStats = async () => {
     try {
@@ -180,11 +198,25 @@ const Header = () => {
                 color={textColor}
               >
                 <HStack spacing={2}>
-                  <Avatar size="sm" name="사용자" />
+                  <Avatar 
+                    name={userProfile?.name || '사용자'} // ✅ 실제 이름 사용
+                    size="sm" 
+                  />
                   <Box textAlign="left" display={{ base: 'none', md: 'block' }}>
-                    <Text fontSize="sm" fontWeight="semibold">사용자</Text>
+                    <Text fontSize="sm" fontWeight="semibold">
+                      {userProfile?.name || '사용자'} {/* ✅ 실제 이름 사용 */}
+                    </Text>
                     {followStats && (
-                      <Text fontSize="xs" opacity={0.8}>
+                      <Text 
+                        fontSize="xs" 
+                        opacity={0.8}
+                        cursor="pointer"
+                        _hover={{ opacity: 1, textDecoration: 'underline' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/social/follow');
+                        }}
+                      >
                         팔로워 {followStats.followers_count} · 팔로잉 {followStats.followees_count}
                       </Text>
                     )}
@@ -198,6 +230,14 @@ const Header = () => {
                 >
                   내 프로필
                 </MenuItem>
+
+                <MenuItem 
+                  icon={<SearchIcon />} // ✅ 추가
+                  onClick={() => navigate('/social/explore')} // ✅ 추가
+                >
+                  사용자 탐색
+                </MenuItem>
+
                 <MenuItem 
                   icon={<BookmarkIcon />}
                   onClick={() => navigate('/bookmarks')}
@@ -205,6 +245,7 @@ const Header = () => {
                   북마크
                   {/* TODO: 북마크 수 표시 */}
                 </MenuItem>
+
                 <MenuItem 
                   icon={<HeartIcon />}
                   onClick={() => navigate('/social/liked')}

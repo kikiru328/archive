@@ -37,13 +37,14 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { feedAPI, categoryAPI, commentAPI } from '../services/api';
 import SocialButtons from '../components/social/SocialButtons';
+import FollowButton from '../components/social/FollowButton';
 import { 
   SearchIcon, 
   FilterIcon, 
   SyncIcon,
   EyeIcon,
 } from '../components/icons/SimpleIcons';
-
+import { getCurrentUserId } from '../utils/auth';
 interface FeedItem {
   curriculum_id: string;
   title: string;
@@ -68,6 +69,7 @@ interface Category {
 
 const Feed: React.FC = () => {
   const navigate = useNavigate();
+  const currentUserId = getCurrentUserId();
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -311,15 +313,25 @@ const Feed: React.FC = () => {
                         </Text>
                       </VStack>
                     </HStack>
-                    {item.category_name && (
-                      <Badge
-                        style={{ backgroundColor: item.category_color }}
-                        color="white"
-                        variant="solid"
-                      >
-                        {item.category_name}
-                      </Badge>
-                    )}
+                    <HStack spacing={2}> {/* ✅ 수정: 기존 Badge를 HStack으로 감싸기 */}
+                      {/* ✅ 팔로우 버튼 추가 - 자신이 아닌 경우에만 */}
+                      {currentUserId && item.owner_id !== currentUserId && (
+                        <FollowButton 
+                          userId={item.owner_id} 
+                          size="xs"
+                          variant="outline"
+                        />
+                      )}
+                      {item.category_name && (
+                        <Badge
+                          style={{ backgroundColor: item.category_color }}
+                          color="white"
+                          variant="solid"
+                        >
+                          {item.category_name}
+                        </Badge>
+                      )}
+                    </HStack>
                   </HStack>
 
                   {/* 커리큘럼 제목 */}
