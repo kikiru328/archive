@@ -43,7 +43,7 @@ import {
   IconButton,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { authAPI, followAPI, curriculumAPI, summaryAPI, feedbackAPI } from '../services/api';
+import { authAPI, followAPI, curriculumAPI, summaryAPI, feedbackAPI, userAPI } from '../services/api';
 import { UsersIcon, HeartIcon, CommentIcon, BookmarkIcon } from '../components/icons/SimpleIcons';
 import { EditIcon } from '@chakra-ui/icons';
 import { getCurrentUserId } from '../utils/auth';
@@ -108,7 +108,7 @@ const Profile: React.FC = () => {
       setError('');
       
       // 프로필 정보 가져오기
-      const profileResponse = await authAPI.getProfile();
+      const profileResponse = await userAPI.getProfile(); // ✅ userAPI 사용
       setProfile(profileResponse.data);
       
       // 팔로우 통계 가져오기
@@ -187,18 +187,36 @@ const Profile: React.FC = () => {
     try {
       setUpdating(true);
       
-      // 프로필 수정은 아직 백엔드에서 구현되지 않았으므로 시뮬레이션
+      // 실제 API 호출
+      await userAPI.updateProfile({
+        name: updateForm.name.trim(),
+        ...(updateForm.password.trim() && { password: updateForm.password.trim() })
+      });
+      
       toast({
-        title: '프로필 수정 기능이 곧 추가될 예정입니다',
-        status: 'info',
+        title: '프로필이 수정되었습니다',
+        status: 'success',
         duration: 3000,
       });
       
       onEditModalClose();
+      await fetchProfileData(); // 프로필 정보 새로고침
     } catch (error: any) {
       console.error('프로필 수정 실패:', error);
+      
+      let errorMessage = '프로필 수정에 실패했습니다';
+      if (error.response?.data?.detail) {
+        if (Array.isArray(error.response.data.detail)) {
+          errorMessage = error.response.data.detail
+            .map((err: any) => err.msg || JSON.stringify(err))
+            .join(', ');
+        } else {
+          errorMessage = error.response.data.detail;
+        }
+      }
+      
       toast({
-        title: '프로필 수정에 실패했습니다',
+        title: errorMessage,
         status: 'error',
         duration: 3000,
       });
@@ -206,6 +224,7 @@ const Profile: React.FC = () => {
       setUpdating(false);
     }
   };
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR', {
