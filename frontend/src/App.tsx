@@ -11,6 +11,8 @@ import Summary from './pages/Summary';
 import SummaryDetail from './pages/SummaryDetail';
 import Feed from './pages/Feed';
 import Bookmarks from './pages/Bookmarks';
+import LikedCurriculums from './pages/LikedCurriculums';
+import MyComments from './pages/MyComments';
 
 // Chakra UI 테마 확장
 const theme = extendTheme({
@@ -57,6 +59,8 @@ function App() {
               {/* 소셜 기능 */}
               <Route path="/feed" element={<Feed />} />
               <Route path="/bookmarks" element={<Bookmarks />} />
+              <Route path="/liked" element={<LikedCurriculums />} />
+              <Route path="/comments" element={<MyComments />} />
               
               {/* 기본 라우트 */}
               <Route path="/" element={<Dashboard />} />

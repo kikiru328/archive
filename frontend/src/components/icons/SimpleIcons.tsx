@@ -15,6 +15,7 @@ import {
   FaFilter,
   FaShareAlt,
   FaRegBookmark,
+  FaEdit,
 } from 'react-icons/fa';
 
 interface IconProps {
