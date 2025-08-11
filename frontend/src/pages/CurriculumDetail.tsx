@@ -96,6 +96,19 @@ interface Category {
   is_active: boolean;
   usage_count: number;
 }
+interface WeekProgress {
+  week_number: number;
+  has_summary: boolean;
+  has_feedback: boolean;
+  is_completed: boolean; // 요약과 피드백 모두 완료
+}
+
+interface CurriculumProgress {
+  total_weeks: number;
+  completed_weeks: number;
+  completion_percentage: number;
+  week_progress: WeekProgress[];
+}
 
 const CurriculumDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -118,6 +131,8 @@ const CurriculumDetail: React.FC = () => {
   const [newTag, setNewTag] = useState('');
   const [tagSuggestions, setTagSuggestions] = useState<Tag[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
+  const [curriculumProgress, setCurriculumProgress] = useState<CurriculumProgress | null>(null);
+  const [loadingProgress, setLoadingProgress] = useState(false);
 
   // 계산된 값들 (state 선언 후에)
   const isOwner = curriculum && currentUserId && curriculum.owner_id === currentUserId;
@@ -141,8 +156,154 @@ const CurriculumDetail: React.FC = () => {
   useEffect(() => {
     if (id) {
       fetchCurriculumDetail();
+      fetchCurriculumProgress();
     }
   }, [id]);
+  const fetchCurriculumProgress = async () => {
+    if (!curriculum) return;
+
+    try {
+      setLoadingProgress(true);
+      
+      // 각 주차별로 요약과 피드백 상태 확인
+      const weekProgressPromises = curriculum.week_schedules.map(async (week) => {
+        try {
+          // 해당 주차의 요약 조회
+          const summaryResponse = await summaryAPI.getByWeek(curriculum.id, week.week_number);
+          const summaries = summaryResponse.data.summaries || [];
+          const hasSummary = summaries.length > 0;
+          
+          // 요약이 있다면 피드백 확인
+          let hasFeedback = false;
+          if (hasSummary && summaries[0]) {
+            try {
+              await feedbackAPI.getBySummary(summaries[0].id);
+              hasFeedback = true;
+            } catch (error) {
+              // 피드백이 없는 경우
+              hasFeedback = false;
+            }
+          }
+
+          return {
+            week_number: week.week_number,
+            has_summary: hasSummary,
+            has_feedback: hasFeedback,
+            is_completed: hasSummary && hasFeedback, // 요약과 피드백 모두 완료
+          };
+        } catch (error) {
+          console.error(`주차 ${week.week_number} 진행률 조회 실패:`, error);
+          return {
+            week_number: week.week_number,
+            has_summary: false,
+            has_feedback: false,
+            is_completed: false,
+          };
+        }
+      });
+
+      const weekProgressResults = await Promise.all(weekProgressPromises);
+      const completedWeeks = weekProgressResults.filter(week => week.is_completed).length;
+      const totalWeeks = curriculum.week_schedules.length;
+      const completionPercentage = totalWeeks > 0 ? Math.round((completedWeeks / totalWeeks) * 100) : 0;
+
+      setCurriculumProgress({
+        total_weeks: totalWeeks,
+        completed_weeks: completedWeeks,
+        completion_percentage: completionPercentage,
+        week_progress: weekProgressResults,
+      });
+
+    } catch (error) {
+      console.error('커리큘럼 진행률 계산 실패:', error);
+    } finally {
+      setLoadingProgress(false);
+    }
+  };
+
+  const getWeekProgress = (weekNumber: number): WeekProgress | null => {
+    return curriculumProgress?.week_progress.find(wp => wp.week_number === weekNumber) || null;
+  };
+
+  const renderWeekProgress = (week: WeekSchedule) => {
+    const progress = getWeekProgress(week.week_number);
+    
+    if (!progress) {
+      return (
+        <Badge colorScheme="gray" variant="outline" size="sm">
+          미시작
+        </Badge>
+      );
+    }
+
+    if (progress.is_completed) {
+      return (
+        <Badge colorScheme="green" variant="solid" size="sm">
+          <CheckIcon mr={1} />
+          완료
+        </Badge>
+      );
+    }
+
+    if (progress.has_summary && !progress.has_feedback) {
+      return (
+        <Badge colorScheme="yellow" variant="solid" size="sm">
+          <TimeIcon mr={1} />
+          피드백 대기
+        </Badge>
+      );
+    }
+
+    return (
+      <Badge colorScheme="blue" variant="outline" size="sm">
+        진행 중
+      </Badge>
+    );
+  };
+
+  // 진행률 표시 컴포넌트
+  const renderProgressSection = () => {
+    if (loadingProgress) {
+      return (
+        <VStack align="start" flex={1} spacing={1}>
+          <Text fontSize="sm" color={secondaryTextColor}>진행률</Text>
+          <HStack>
+            <Spinner size="sm" color="blue.500" />
+            <Text fontSize="sm" color={secondaryTextColor}>계산 중...</Text>
+          </HStack>
+        </VStack>
+      );
+    }
+
+    if (!curriculumProgress) {
+      return (
+        <VStack align="start" flex={1} spacing={1}>
+          <Text fontSize="sm" color={secondaryTextColor}>진행률</Text>
+          <Text fontSize="sm" color={secondaryTextColor}>데이터 없음</Text>
+        </VStack>
+      );
+    }
+
+    return (
+      <VStack align="start" flex={1} spacing={1}>
+        <HStack justify="space-between" w="100%">
+          <Text fontSize="sm" color={secondaryTextColor}>진행률</Text>
+          <Text fontSize="sm" color={secondaryTextColor}>
+            {curriculumProgress.completed_weeks}/{curriculumProgress.total_weeks}주차 완료
+          </Text>
+        </HStack>
+        <Progress 
+          value={curriculumProgress.completion_percentage} 
+          size="md" 
+          colorScheme="blue" 
+          w="200px"
+        />
+        <Text fontSize="xs" color={secondaryTextColor}>
+          {curriculumProgress.completion_percentage}% 완료
+        </Text>
+      </VStack>
+    );
+  };
 
   const fetchTagsAndCategory = async (curriculumId: string) => {
     try {
@@ -643,7 +804,7 @@ const CurriculumDetail: React.FC = () => {
                 <VStack align="start" spacing={1}>
                   <Text fontSize="sm" color={secondaryTextColor}>전체 주차</Text>
                   <Text fontSize="2xl" fontWeight="bold" color={textColor}>
-                    {curriculum.week_schedules.length}주
+                    {curriculum?.week_schedules.length || 0}주
                   </Text>
                 </VStack>
                 <VStack align="start" spacing={1}>
@@ -652,6 +813,8 @@ const CurriculumDetail: React.FC = () => {
                     {getTotalLessons()}개
                   </Text>
                 </VStack>
+                {/* 수정된 진행률 섹션 */}
+                {renderProgressSection()}
                 <VStack align="start" flex={1} spacing={1}>
                   <HStack justify="space-between" w="100%">
                     <Text fontSize="sm" color={secondaryTextColor}>진행률</Text>
@@ -767,8 +930,9 @@ const CurriculumDetail: React.FC = () => {
                               </Text>
                             </VStack>
                             <Badge colorScheme="blue" variant="subtle">
-                              {week.lessons.length}개 레슨
+                              {week.lessons?.length}개 레슨
                             </Badge>
+                            {renderWeekProgress(week)}
                           </HStack>
                           <HStack spacing={2}>
                             <IconButton
