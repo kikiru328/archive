@@ -167,10 +167,10 @@ async def get_my_comments(
         items_per_page=items_per_page,
     )
 
-    page_dto: CommentPageDTO = await comment_service.get_comments(
+    page_dto, user_names = await comment_service.get_comments_with_user_names(
         query=query,
         user_id=current_user.id,
         role=RoleVO(current_user.role.value),
     )
 
-    return CommentPageResponse.from_dto(page_dto)
+    return CommentPageResponse.from_dto(page_dto, user_names)
