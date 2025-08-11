@@ -1,4 +1,4 @@
-// src/App.tsx - 소셜 기능 라우트 추가
+// src/App.tsx - 프로필 라우트 추가
 import { ChakraProvider, Box, extendTheme, ColorModeScript } from '@chakra-ui/react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
@@ -13,6 +13,7 @@ import Feed from './pages/Feed';
 import Bookmarks from './pages/Bookmarks';
 import LikedCurriculums from './pages/LikedCurriculums';
 import MyComments from './pages/MyComments';
+import Profile from './pages/Profile';
 
 // Chakra UI 테마 확장
 const theme = extendTheme({
@@ -63,6 +64,10 @@ function App() {
               <Route path="/social/liked" element={<LikedCurriculums />} />
               <Route path="/comments" element={<MyComments />} />
               <Route path="/social/comments" element={<MyComments />} />
+              
+              {/* 프로필 */}
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/social/profile" element={<Profile />} />
               
               {/* 기본 라우트 */}
               <Route path="/" element={<Dashboard />} />

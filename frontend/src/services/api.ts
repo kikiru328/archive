@@ -35,6 +35,24 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+export const userAPI = {
+  // 현재 사용자 프로필 조회
+  getProfile: () => api.get('/users/me'),
+  
+  // 프로필 수정
+  updateProfile: (data: { name?: string; password?: string }) =>
+    api.put('/users/me', data),
+  
+  // 계정 삭제
+  deleteAccount: () => api.delete('/users/me'),
+  
+  // 사용자 검색 (소셜 기능용)
+  searchUsers: (params: { q: string; page?: number; items_per_page?: number }) =>
+    api.get('/users', { params }),
+  
+  // 특정 사용자 프로필 조회 (공개 정보만)
+  getUserProfile: (userId: string) => api.get(`/users/${userId}/profile`),
+};
 
 export const authAPI = {
   login: (data: { username: string; password: string }) => {
@@ -408,3 +426,4 @@ export const socialStatsAPI = {
   getCurriculumSocialStats: (curriculumId: string) =>
     api.get(`/curriculums/${curriculumId}/social-stats`),
 };
+
