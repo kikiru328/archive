@@ -85,10 +85,6 @@ const Feed: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
 
   // 댓글 모달
-  const { isOpen: isCommentOpen, onOpen: onCommentOpen, onClose: onCommentClose } = useDisclosure();
-  const [selectedCurriculumId, setSelectedCurriculumId] = useState('');
-  const [commentContent, setCommentContent] = useState('');
-  const [submittingComment, setSubmittingComment] = useState(false);
 
   const textColor = useColorModeValue('gray.900', 'white');
   const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
@@ -202,30 +198,6 @@ const Feed: React.FC = () => {
     fetchFeed(true);
   };
 
-  const handleCommentSubmit = async () => {
-    if (!commentContent.trim() || !selectedCurriculumId) return;
-
-    try {
-      setSubmittingComment(true);
-      await commentAPI.createComment(selectedCurriculumId, {
-        content: commentContent.trim()
-      });
-      
-      setCommentContent('');
-      onCommentClose();
-      // 피드 새로고침 (댓글 수 업데이트를 위해)
-      await fetchFeed(true);
-    } catch (error: any) {
-      console.error('댓글 작성 실패:', error);
-    } finally {
-      setSubmittingComment(false);
-    }
-  };
-
-  const openCommentModal = (curriculumId: string) => {
-    setSelectedCurriculumId(curriculumId);
-    onCommentOpen();
-  };
 
   if (loading && feedItems.length === 0) {
     return (
@@ -396,7 +368,6 @@ const Feed: React.FC = () => {
                   {/* 소셜 버튼 */}
                   <SocialButtons
                     curriculumId={item.curriculum_id}
-                    onCommentClick={() => openCommentModal(item.curriculum_id)}
                     size="sm"
                   />
                 </VStack>
@@ -438,37 +409,6 @@ const Feed: React.FC = () => {
         )}
 
         {/* 댓글 작성 모달 */}
-        <Modal isOpen={isCommentOpen} onClose={onCommentClose}>
-          <ModalOverlay />
-          <ModalContent bg={cardBg} color={textColor}>
-            <ModalHeader>댓글 작성</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <FormControl>
-                <FormLabel>댓글 내용</FormLabel>
-                <Textarea
-                  value={commentContent}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                  placeholder="이 커리큘럼에 대한 의견을 남겨주세요..."
-                  rows={4}
-                />
-              </FormControl>
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="ghost" mr={3} onClick={onCommentClose}>
-                취소
-              </Button>
-              <Button
-                colorScheme="blue"
-                onClick={handleCommentSubmit}
-                isLoading={submittingComment}
-                isDisabled={!commentContent.trim()}
-              >
-                댓글 작성
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
       </VStack>
     </Container>
   );

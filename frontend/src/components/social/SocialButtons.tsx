@@ -1,4 +1,4 @@
-// src/components/social/SocialButtons.tsx - 완전히 수정된 버전
+// src/components/social/SocialButtons.tsx - 댓글 조회 기능 추가
 import React, { useState, useEffect } from 'react';
 import {
   HStack,
@@ -7,9 +7,25 @@ import {
   useToast,
   useColorModeValue,
   Tooltip,
-  Badge,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+  VStack,
+  Box,
+  Avatar,
+  Divider,
+  Button,
+  Textarea,
+  FormControl,
+  FormLabel,
+  Spinner,
 } from '@chakra-ui/react';
-import { likeAPI, bookmarkAPI, socialStatsAPI } from '../../services/api';
+import { likeAPI, bookmarkAPI, socialStatsAPI, commentAPI } from '../../services/api';
 import { 
   HeartIcon, 
   HeartOutlineIcon, 
@@ -33,6 +49,19 @@ interface SocialStats {
   is_bookmarked_by_user: boolean;
 }
 
+interface Comment {
+  id: string;
+  curriculum_id: string;
+  user_id: string;
+  user_name?: string;       // 백엔드에서 제공되지 않음
+  username?: string;        // 백엔드에서 제공되지 않음  
+  content?: string;         // 전체 내용 (상세 조회시)
+  content_snippet?: string; // 요약된 내용 (목록 조회시)
+  content_length: number;   // 내용 길이
+  created_at: string;
+  updated_at?: string;
+}
+
 const SocialButtons: React.FC<SocialButtonsProps> = ({ 
   curriculumId, 
   onCommentClick,
@@ -40,12 +69,22 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
   showCounts = true 
 }) => {
   const [stats, setStats] = useState<SocialStats | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
   const toast = useToast();
+
+  const { isOpen: isCommentsOpen, onOpen: onCommentsOpen, onClose: onCommentsClose } = useDisclosure();
 
   const iconColor = useColorModeValue('gray.600', 'gray.400');
   const activeColor = useColorModeValue('red.500', 'red.400');
   const bookmarkColor = useColorModeValue('blue.500', 'blue.400');
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const textColor = useColorModeValue('gray.900', 'white');
+  const secondaryTextColor = useColorModeValue('gray.600', 'gray.300');
+  const commentBoxBg = useColorModeValue('gray.50', 'gray.600');
 
   useEffect(() => {
     fetchSocialStats();
@@ -57,6 +96,36 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
       setStats(response.data);
     } catch (error) {
       console.error('소셜 통계 조회 실패:', error);
+    }
+  };
+
+  const fetchComments = async () => {
+    try {
+      setLoadingComments(true);
+      console.log('댓글 조회 요청:', curriculumId);
+      const response = await commentAPI.getCommentsByCurriculum(curriculumId);
+      console.log('댓글 API 응답:', response.data);
+      
+      const commentsData = response.data.comments || response.data || [];
+      console.log('댓글 데이터:', commentsData);
+      console.log('댓글 개수:', commentsData.length);
+      
+      // 첫 번째 댓글의 구조 확인
+      if (commentsData.length > 0) {
+        console.log('첫 번째 댓글 구조:', commentsData[0]);
+        console.log('첫 번째 댓글의 모든 키:', Object.keys(commentsData[0]));
+      }
+      
+      setComments(commentsData);
+    } catch (error) {
+      console.error('댓글 조회 실패:', error);
+      toast({
+        title: '댓글을 불러오는데 실패했습니다',
+        status: 'error',
+        duration: 3000,
+      });
+    } finally {
+      setLoadingComments(false);
     }
   };
 
@@ -175,94 +244,234 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
     }
   };
 
+  const handleCommentClick = () => {
+    if (onCommentClick) {
+      onCommentClick();
+    } else {
+      // 내장 댓글 모달 열기
+      onCommentsOpen();
+      fetchComments();
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      setSubmittingComment(true);
+      await commentAPI.createComment(curriculumId, {
+        content: newComment.trim()
+      });
+      
+      setNewComment('');
+      toast({
+        title: '댓글이 작성되었습니다',
+        status: 'success',
+        duration: 2000,
+      });
+      
+      // 댓글 목록과 통계 새로고침
+      await fetchComments();
+      await fetchSocialStats();
+    } catch (error: any) {
+      console.error('댓글 작성 실패:', error);
+      toast({
+        title: '댓글 작성에 실패했습니다',
+        status: 'error',
+        duration: 3000,
+      });
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   if (!stats) return null;
 
   return (
-    <HStack spacing={4}>
-      {/* 좋아요 버튼 */}
-      <HStack spacing={1}>
-        <Tooltip label={stats.is_liked_by_user ? '좋아요 취소' : '좋아요'}>
+    <>
+      <HStack spacing={4}>
+        {/* 좋아요 버튼 */}
+        <HStack spacing={1}>
+          <Tooltip label={stats.is_liked_by_user ? '좋아요 취소' : '좋아요'}>
+            <IconButton
+              aria-label="좋아요"
+              icon={stats.is_liked_by_user ? <HeartIcon /> : <HeartOutlineIcon />}
+              color={stats.is_liked_by_user ? activeColor : iconColor}
+              variant="ghost"
+              size={size}
+              isLoading={loading}
+              onClick={handleLike}
+              _hover={{
+                color: activeColor,
+                transform: 'scale(1.1)',
+              }}
+              transition="all 0.2s"
+            />
+          </Tooltip>
+          {showCounts && (
+            <Text fontSize="sm" color={iconColor}>
+              {stats.like_count}
+            </Text>
+          )}
+        </HStack>
+
+        {/* 댓글 버튼 */}
+        <HStack spacing={1}>
+          <Tooltip label="댓글">
+            <IconButton
+              aria-label="댓글"
+              icon={<CommentIcon />}
+              color={iconColor}
+              variant="ghost"
+              size={size}
+              onClick={handleCommentClick}
+              _hover={{
+                color: 'blue.500',
+                transform: 'scale(1.1)',
+              }}
+              transition="all 0.2s"
+            />
+          </Tooltip>
+          {showCounts && (
+            <Text fontSize="sm" color={iconColor}>
+              {stats.comment_count}
+            </Text>
+          )}
+        </HStack>
+
+        {/* 북마크 버튼 */}
+        <Tooltip label={stats.is_bookmarked_by_user ? '북마크 해제' : '북마크'}>
           <IconButton
-            aria-label="좋아요"
-            icon={stats.is_liked_by_user ? <HeartIcon /> : <HeartOutlineIcon />}
-            color={stats.is_liked_by_user ? activeColor : iconColor}
+            aria-label="북마크"
+            icon={stats.is_bookmarked_by_user ? <BookmarkIcon /> : <BookmarkOutlineIcon />}
+            color={stats.is_bookmarked_by_user ? bookmarkColor : iconColor}
             variant="ghost"
             size={size}
             isLoading={loading}
-            onClick={handleLike}
+            onClick={handleBookmark}
             _hover={{
-              color: activeColor,
+              color: bookmarkColor,
               transform: 'scale(1.1)',
             }}
             transition="all 0.2s"
           />
         </Tooltip>
-        {showCounts && (
-          <Text fontSize="sm" color={iconColor}>
-            {stats.like_count}
-          </Text>
-        )}
-      </HStack>
 
-      {/* 댓글 버튼 */}
-      <HStack spacing={1}>
-        <Tooltip label="댓글">
+        {/* 공유 버튼 */}
+        <Tooltip label="공유">
           <IconButton
-            aria-label="댓글"
-            icon={<CommentIcon />}
+            aria-label="공유"
+            icon={<ShareIcon />}
             color={iconColor}
             variant="ghost"
             size={size}
-            onClick={onCommentClick}
+            onClick={handleShare}
             _hover={{
-              color: 'blue.500',
+              color: 'green.500',
               transform: 'scale(1.1)',
             }}
             transition="all 0.2s"
           />
         </Tooltip>
-        {showCounts && (
-          <Text fontSize="sm" color={iconColor}>
-            {stats.comment_count}
-          </Text>
-        )}
       </HStack>
 
-      {/* 북마크 버튼 */}
-      <Tooltip label={stats.is_bookmarked_by_user ? '북마크 해제' : '북마크'}>
-        <IconButton
-          aria-label="북마크"
-          icon={stats.is_bookmarked_by_user ? <BookmarkIcon /> : <BookmarkOutlineIcon />}
-          color={stats.is_bookmarked_by_user ? bookmarkColor : iconColor}
-          variant="ghost"
-          size={size}
-          isLoading={loading}
-          onClick={handleBookmark}
-          _hover={{
-            color: bookmarkColor,
-            transform: 'scale(1.1)',
-          }}
-          transition="all 0.2s"
-        />
-      </Tooltip>
+      {/* 댓글 모달 */}
+      <Modal isOpen={isCommentsOpen} onClose={onCommentsClose} size="lg">
+        <ModalOverlay />
+        <ModalContent bg={cardBg} color={textColor}>
+          <ModalHeader>댓글 ({stats.comment_count})</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4} align="stretch">
+              {/* 새 댓글 작성 */}
+              <VStack spacing={3}>
+                <FormControl>
+                  <FormLabel>댓글 작성</FormLabel>
+                  <Textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="이 커리큘럼에 대한 의견을 남겨주세요..."
+                    rows={3}
+                  />
+                </FormControl>
+                <Button
+                  colorScheme="blue"
+                  onClick={handleSubmitComment}
+                  isLoading={submittingComment}
+                  isDisabled={!newComment.trim()}
+                  alignSelf="flex-end"
+                >
+                  댓글 작성
+                </Button>
+              </VStack>
 
-      {/* 공유 버튼 */}
-      <Tooltip label="공유">
-        <IconButton
-          aria-label="공유"
-          icon={<ShareIcon />}
-          color={iconColor}
-          variant="ghost"
-          size={size}
-          onClick={handleShare}
-          _hover={{
-            color: 'green.500',
-            transform: 'scale(1.1)',
-          }}
-          transition="all 0.2s"
-        />
-      </Tooltip>
-    </HStack>
+              <Divider />
+
+              {/* 댓글 목록 */}
+              {loadingComments ? (
+                <VStack py={4}>
+                  <Spinner />
+                  <Text color={secondaryTextColor}>댓글을 불러오는 중...</Text>
+                </VStack>
+              ) : comments.length === 0 ? (
+                <Box textAlign="center" py={6}>
+                  <Text color={secondaryTextColor}>
+                    아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!
+                  </Text>
+                </Box>
+              ) : (
+                <VStack spacing={3} align="stretch" maxH="400px" overflowY="auto">
+                  <Text fontSize="sm" color={secondaryTextColor}>
+                    총 {comments.length}개의 댓글
+                  </Text>
+                  {comments.map((comment, index) => {
+                    console.log(`댓글 ${index + 1}:`, comment);
+                    
+                    // 사용자 이름 결정 (현재 백엔드에서 제공하지 않으므로 user_id 사용)
+                    const displayName = comment.username || 
+                                       comment.user_name || 
+                                       `사용자${comment.user_id?.slice(-4) || index}`;
+                    
+                    return (
+                      <Box key={comment.id || index} p={3} borderRadius="md" bg={commentBoxBg}>
+                        <HStack spacing={3} align="start">
+                          <Avatar name={displayName} size="sm" />
+                          <VStack align="start" spacing={1} flex={1}>
+                            <HStack justify="space-between" w="100%">
+                              <Text fontWeight="semibold" fontSize="sm" color={textColor}>
+                                {displayName}
+                              </Text>
+                              <Text fontSize="xs" color={secondaryTextColor}>
+                                {comment.created_at ? formatDate(comment.created_at) : '방금 전'}
+                              </Text>
+                            </HStack>
+                            <Text fontSize="sm" lineHeight="1.4" color={textColor}>
+                              {comment.content || comment.content_snippet || '내용이 없습니다'}
+                            </Text>
+                          </VStack>
+                        </HStack>
+                      </Box>
+                    );
+                  })}
+                </VStack>
+              )}
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onCommentsClose}>닫기</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
   );
 };
 
